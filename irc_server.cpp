@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
             std::cerr << "Error writing to socket" << "\n";
             return 1;
         }
-        int i = strncmp("Bye", buffer, 3);
+        int i = strncmp("bye", buffer, 3);
         if(i == 0)
             break;
     }
