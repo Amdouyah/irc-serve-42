@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <string>
 #include <stdlib.h>
-
+#include <cstring>
+using namespace std;
 
 int main(int argc, char *argv[])
 {
+    
     if(argc < 2)
     {
         std::cerr << "port not provided,  program existed" << "\n";
@@ -43,6 +45,7 @@ int main(int argc, char *argv[])
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+    std::cout << "Client IP: " << inet_ntoa(cli_addr.sin_addr) << "\n";
     if(newsockfd < 0)
     {
         std::cerr << "Error on accept" << "\n";
@@ -51,27 +54,28 @@ int main(int argc, char *argv[])
     while(1)
     {
         bzero(buffer, 255);
-        n = read(newsockfd, buffer, 255);
-        if(n < 0)
-        {
-            std::cerr << "Error reading from socket" << "\n";
-            return 1;
-        }
-        std::cout << "Client: " << buffer << "\n";
-        bzero(buffer, 255);
-        std::cout << "Server: ";
-        std::string data;
-        std::getline(std::cin, data);
-        strcpy(buffer, data.c_str());
-        n = write(newsockfd, buffer, strlen(buffer));
-        if(n < 0)
-        {
-            std::cerr << "Error writing to socket" << "\n";
-            return 1;
-        }
-        int i = strncmp("bye", buffer, 3);
-        if(i == 0)
-            break;
+        recv(newsockfd, buffer, 255, 0);
+        // n = read(newsockfd, buffer, 255);
+        // if(n < 0)
+        // {
+        //     std::cerr << "Error reading from socket" << "\n";
+        //     return 1;
+        // }
+        std::cout << buffer;
+        // bzero(buffer, 255);
+        // std::cout << "Server: ";
+        // std::string data;
+        // std::getline(std::cin, data);
+        // strcpy(buffer, data.c_str());
+        // n = write(newsockfd, buffer, strlen(buffer));
+        // if(n < 0)
+        // {
+        //     std::cerr << "Error writing to socket" << "\n";
+        //     return 1;
+        // }
+        // int i = strncmp("bye", buffer, 3);
+        // if(i == 0)
+        //     break;
     }
     close(newsockfd);  
 }
