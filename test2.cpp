@@ -174,7 +174,7 @@ void read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int
         // Relays the received message to all connected sockets
         // but not to the server socket or the sender socket
         printf("[%d] Got message: %s", sender_fd, buffer);
-        memset(&msg_to_send, '\0', sizeof(msg_to_send));
+        std::memset(&msg_to_send, '\0', sizeof(msg_to_send));
         snprintf(msg_to_send, sizeof(msg_to_send), "[%d] %.8170s", sender_fd, buffer);
         
         for (int j = 0; j < *poll_count; j++) {
@@ -202,7 +202,8 @@ void add_to_poll_fds(struct pollfd *poll_fds[], int new_fd, int *poll_count, int
 }
 
 // Remove an fd from the poll_fds array
-void del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count) {
+void del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count)
+{
     // Copy the fd from the end of the array to this index
     (*poll_fds)[i] = (*poll_fds)[*poll_count - 1];
     (*poll_count)--;
