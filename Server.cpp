@@ -93,9 +93,8 @@ Server::~Server()
 
 	void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, int *poll_count, int *poll_size)
 	{
-			int client_fd;
+		int client_fd;
     	int status;
-
     	client_fd = accept(server_socket, NULL, NULL); // Accept new connection
     	if (client_fd == -1) {
 			std::cerr << "[Server] Accept error: " << strerror(errno) << std::endl;
@@ -127,35 +126,50 @@ Server::~Server()
    			sender_fd = (*poll_fds)[i].fd;
    			std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
    			bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
-			std::cout << buffer << std::endl;
    			if (bytes_read <= 0) {
    			    if (bytes_read == 0) {
 					std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
    			    }
    			    else {
-					std::cerr << "[Server] Receive error from client fd " << sender_fd << ": " << strerror(errno) << std::endl;
+					std::cerr << "[Server] Reeceive error from client fd " << sender_fd << ": " << strerror(errno) << std::endl;
    			    }
    			    close(sender_fd); // Close socket
    			    del_from_poll_fds(poll_fds, i, poll_count);
    			}
    			else {
-				
-				/*std::cout << "[Server] Received message from client fd " << sender_fd << ": " << buffer << std::endl;//
-   			    memset(&msg_to_send, '\0', sizeof(msg_to_send));
-   			    snprintf(msg_to_send, sizeof(msg_to_send), "[%d] %.8170s", sender_fd, buffer);// 8170 is the max length of a message
-   			    for (int j = 0; j < *poll_count; j++) {
-   			        dest_fd = (*poll_fds)[j].fd;
-   			        if (dest_fd != server_socket && dest_fd != sender_fd) {
-   			            status = send(dest_fd, msg_to_send, strlen(msg_to_send), 0);
-   			            if (status == -1) {
-   			                fprintf(stderr, "[Server] Send error to client fd %d: %s\n", dest_fd, strerror(errno));
-   			            }
-   			        }
-   			    }
-				*/
-   			}
+				deque_itr it = _clients.begin();
+					std::stringstream ss(buffer);
+					std::string line;
+					std::vector<std::string> lines;
+					while (std::getline(ss, line, '\n'))
+					    lines.push_back(line);
+				// if (std::string(buffer).find("PASS") == 0)
+				// {
+				// 	std::string testing = std::string(buffer).substr(5, this->_server.password.length());
+				// 	if(testing == this->_server.password)
+				// 	{
+				// 		std::cout << "password is " << std::string(buffer).substr(5) << std::endl;
+				// 		for (it = _clients.begin(); it != _clients.end(); it++)
+				// 		{
+				// 			if ((*it)->client_fd == sender_fd)
+				// 			{
+				// 				(*it)->password = true;
+				// 				std::cout << "password is correct" << std::endl;
+				// 				break;
+				// 			}
+				// 		}
+				// 	}
+				// 	else
+				// 		std::cout << "password is incorrect" << std::endl;
+				// }
+				// else if ((*it)->password == true)
+				// {
+				// 	std::cout<< "dire dakchi zwine" << std::endl;
+   				// }
+				// else
+				//  	std::cout << "you need password to connect to server" << std::endl;
 		}
-
+		}
 		//****************************************************************
 		void Server::add_to_poll_fds(struct pollfd *poll_fds[], int new_fd, int *poll_count, int *poll_size)
 		{
@@ -174,10 +188,3 @@ Server::~Server()
 			(*poll_fds)[i] = (*poll_fds)[*poll_count - 1];
 			(*poll_count)--;
 		}
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
-
-/* ************************************************************************** */

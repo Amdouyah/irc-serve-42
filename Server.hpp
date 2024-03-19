@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,8 +17,10 @@
 #include <deque>
 #include <fcntl.h>
 #include <stdexcept>
+#include <vector>
 #include "Client.hpp"
 #include <deque>
+#define deque_itr std::deque<Client *>::iterator
 
 struct _server_
 {
