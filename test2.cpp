@@ -156,7 +156,7 @@ void read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int
     int status;
     int dest_fd;
     int sender_fd;
-
+    printf("read frome socket\n");
     sender_fd = (*poll_fds)[i].fd;
     memset(&buffer, '\0', sizeof buffer);
     bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
@@ -174,7 +174,7 @@ void read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int
         // Relays the received message to all connected sockets
         // but not to the server socket or the sender socket
         printf("[%d] Got message: %s", sender_fd, buffer);
-        std::memset(&msg_to_send, '\0', sizeof(msg_to_send));
+        memset(&msg_to_send, '\0', sizeof(msg_to_send));
         snprintf(msg_to_send, sizeof(msg_to_send), "[%d] %.8170s", sender_fd, buffer);
         
         for (int j = 0; j < *poll_count; j++) {
