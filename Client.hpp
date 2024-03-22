@@ -9,6 +9,7 @@ class Client {
     std::string username;
     std:: string nickname;
     std::string realname;
+    bool invited;
     bool password;
     Client();
 

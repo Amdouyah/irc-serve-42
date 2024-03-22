@@ -18,8 +18,12 @@ int Server::create_server_socket(void)
 		std::cerr << "[Server] Socket error: " << strerror(errno) << std::endl;
 		return (-1);
 	}
+	int en = 1;
+ 	if(setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) //-> set the socket option (SO_REUSEADDR) to reuse the address
+  		throw(std::runtime_error("faild to set option (SO_REUSEADDR) on socket"));
+  if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
+  		throw(std::runtime_error("faild to set option (O_NONBLOCK) on socket"));
 	std::cout << "[Server] Created server socket fd: " << socket_fd << std::endl;
-	fcntl(socket_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
 	// Bind socket to address and port
 	status = bind(socket_fd, (struct sockaddr *)&sa, sizeof sa);
 	if (status != 0)
@@ -79,7 +83,6 @@ void Server::start()
 			}
 			if (this->_server.poll_fds[i].fd == this->_server.server_socket)
 			{
-				std::cout << "accept new connection" << std::endl;
 				accept_new_connection(this->_server.server_socket, &this->_server.poll_fds, &this->_server.poll_count, &this->_server.poll_size);
 			}
 			else
@@ -128,7 +131,6 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	int status;
 	int dest_fd;
 	int sender_fd;
-	std::cout << "read data from socket" << std::endl;
 	sender_fd = (*poll_fds)[i].fd;
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
@@ -148,6 +150,15 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	{
 		std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
 		close(sender_fd); // Close socket
+		for(deque_itr it = _clients.begin(); it != _clients.end(); it++)
+		{
+			if ((*it)->client_fd == sender_fd)
+			{
+				delete *it;
+				_clients.erase(it);
+				break;
+			}
+		}
 		del_from_poll_fds(poll_fds, i, poll_count);
 	}
 	else
@@ -170,7 +181,6 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 					if ((*it2).find("PASS") == 0)
 					{
 						std::string testing = std::string(buffer).substr(5, this->_server.password.length());
-						std::cout << "password is " << testing << std::endl;
 						if(testing == this->_server.password)
 						{
 							std::cout << "password is " << std::string(buffer).substr(5) << std::endl;
@@ -180,12 +190,12 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 						else
 							std::cout << "password is incorrect" << std::endl;
 					}
-			else if ((*it)->password == true)
-			{
-				std::cout<< "dire dakchi zwine" << std::endl;
-			}
-			else
-			 	std::cout << "you need password to connect to server" << std::endl;
+					else if ((*it)->password == true)
+					{
+						std::cout << "dire dakchi zwine" << std::endl;
+					}
+					else
+			 		std::cout << "you need password to connect to server" << std::endl;
 				}
 	}
 }
