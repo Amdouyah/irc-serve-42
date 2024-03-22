@@ -45,6 +45,7 @@ class Server
 		void read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket);
 		void add_to_poll_fds(struct pollfd *poll_fds[], int new_fd, int *poll_count, int *poll_size);
 		void del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count);
+		void regitration(std::vector<std::string>& lines, deque_itr& it);
 
 		~Server();
 	private:

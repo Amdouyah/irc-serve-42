@@ -90,14 +90,13 @@ Server::~Server()
 {
 }
 
-
 void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, int *poll_count, int *poll_size)
 {
 	int client_fd;
 	int status;
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
-	client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len); // Accept new connection
+	client_fd = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len); // Accept new connection
 
 	if (client_fd == -1)
 		throw std::runtime_error("[Server] Accept error: " + std::string(strerror(errno)));
@@ -110,12 +109,76 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 		throw std::runtime_error("[Server] Send error to client fd " + std::to_string(client_fd) + ": " + std::string(strerror(errno)));
 	Client *new_client = new Client();
 	new_client->client_fd = client_fd;
-	new_client->client_addr = client_addr; // Save client address
+	new_client->client_addr = client_addr;												 // Save client address
 	inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN); // Fix: Include the necessary header file
 	new_client->state = 0;
 	_clients.push_back(new_client);
 }
 //****************************************************************
+
+
+		
+void Server::regitration(std::vector<std::string>& lines, deque_itr& it)
+{
+	for (std::vector<std::string>::iterator it2 = lines.begin(); it2 != lines.end(); it2++)
+		{
+			if ((*it2).find("PASS") == 0)
+			{
+				std::string testing = std::string(*it2).substr(5, this->_server.password.length());
+				if (testing == this->_server.password)
+					(*it)->password = true;
+				else
+					std::cout << "password is incorrect" << std::endl;
+			}
+			else if ((*it)->password == true)
+			{
+				if ((*it)->registered == false)
+				{
+					if ((*it2).find("NICK") == 0)
+						(*it)->nickname = std::string(*it2).substr(5);
+					else if ((*it2).find("USER") == 0)
+					{
+						int i = 0;
+						std::stringstream sss((*it2).substr(5));
+						std::string parm;
+						std::vector<std::string> parms;
+						std::vector<std::string> final;
+						while (std::getline(sss, parm, ' '))
+							parms.push_back(parm);
+						std::vector<std::string>::iterator it3 = parms.begin();
+						while ((*it3).find(":") != 0 && it3 != parms.end())
+						{
+							i++;
+							final.push_back(*it3);
+							it3++;
+						}
+						if (i != 3 || (*it3).find(":") == std::string::npos)
+						{
+							std::cout << "you need more parametre" << std::endl;
+						}
+						else{
+						std::string realname;
+						while (it3 != parms.end())
+						{
+							realname += *it3;
+							it3++;
+						}
+						final.push_back(realname);
+						(*it)->username = final[0];
+						(*it)->realname = final[3];
+						(*it)->registered = true;
+						std::cout << "you are registered" << std::endl;
+						}
+					}
+					else
+						std::cout << "you need to register" << std::endl;
+				}
+			}
+			else
+				std::cout << "you need password to connect to server" << std::endl;
+		}
+
+}
 
 void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket)
 {
@@ -130,10 +193,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
 	if (bytes_read < 0)
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			// Resource temporarily unavailable, try again later
-		}
+			
+		if (errno == EAGAIN || errno == EWOULDBLOCK){}// wa7ad mochkila dial fach katbghi tconnecta awtani kigolo lik resourse not available prabably 9aditha be socketopt walakine jat to be sure 
 		else
 		{
 			close(sender_fd); // Close socket
@@ -169,23 +230,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 		std::vector<std::string> lines;
 		while (std::getline(ss, line, '\n'))
 			lines.push_back(line);
-		for (std::vector<std::string>::iterator it2 = lines.begin(); it2 != lines.end(); it2++)
-		{
-			if ((*it2).find("PASS") == 0)
-			{
-				std::string testing = std::string(*it2).substr(5, this->_server.password.length());
-				if (testing == this->_server.password)
-					(*it)->password = true;
-				else
-					std::cout << "password is incorrect" << std::endl;
-			}
-			else if ((*it)->password == true)
-			{
-				std::cout << "dire dakchi zwine" << std::endl;
-			}
-			else
-				std::cout << "you need password to connect to server" << std::endl;
-		}
+		regitration(lines, it);
+		
 	}
 }
 //****************************************************************
