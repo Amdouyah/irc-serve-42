@@ -14,15 +14,12 @@ int Server::create_server_socket(void)
 	// Create listening socket
 	socket_fd = socket(sa.sin_family, SOCK_STREAM, 0);
 	if (socket_fd == -1)
-	{
-		std::cerr << "[Server] Socket error: " << strerror(errno) << std::endl;
-		return (-1);
-	}
+		throw(std::runtime_error("faild to create socket"));
 	int en = 1;
- 	if(setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) //-> set the socket option (SO_REUSEADDR) to reuse the address
-  		throw(std::runtime_error("faild to set option (SO_REUSEADDR) on socket"));
-  if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
-  		throw(std::runtime_error("faild to set option (O_NONBLOCK) on socket"));
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) //-> set the socket option (SO_REUSEADDR) to reuse the address
+		throw(std::runtime_error("faild to set option (SO_REUSEADDR) on socket"));
+	if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
+		throw(std::runtime_error("faild to set option (O_NONBLOCK) on socket"));
 	std::cout << "[Server] Created server socket fd: " << socket_fd << std::endl;
 	// Bind socket to address and port
 	status = bind(socket_fd, (struct sockaddr *)&sa, sizeof sa);
@@ -55,14 +52,10 @@ void Server::start()
 	this->_server.server_socket = create_server_socket();
 	if (this->_server.server_socket == -1)
 		throw std::runtime_error("[Server] Error creating server socket");
-
 	this->_server.poll_size = 5;
 	this->_server.poll_fds = (struct pollfd *)calloc(this->_server.poll_size + 1, sizeof *this->_server.poll_fds);
 	if (!this->_server.poll_fds)
-	{
-		this->_error = 4;
-		return;
-	}
+		throw std::runtime_error("[Server] Error allocating memory for poll_fds");
 	this->_server.poll_fds[0].fd = this->_server.server_socket;
 	this->_server.poll_fds[0].events = POLLIN;
 	this->_server.poll_count = 1;
@@ -101,23 +94,21 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 {
 	int client_fd;
 	int status;
-	client_fd = accept(server_socket, NULL, NULL); // Accept new connection
+	struct sockaddr_in client_addr;
+	socklen_t client_addr_len = sizeof(client_addr);
+	client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len); // Accept new connection
 	if (client_fd == -1)
-	{
-		std::cerr << "[Server] Accept error: " << strerror(errno) << std::endl;
-		return;
-	}
+		throw std::runtime_error("[Server] Accept error: " + std::string(strerror(errno)));
 	fcntl(client_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
 	add_to_poll_fds(poll_fds, client_fd, poll_count, poll_size);
 	// Send welcome message to client
 	std::string msg_to_send = "Welcome to irc server \n";
 	status = send(client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 	if (status == -1)
-	{
-		std::cerr << "[Server] Send error to client fd " << client_fd << ": " << strerror(errno) << std::endl;
-	}
+		throw std::runtime_error("[Server] Send error to client fd " + std::to_string(client_fd) + ": " + std::string(strerror(errno)));
 	Client *new_client = new Client();
 	new_client->client_fd = client_fd;
+	new_client->client_addr = client_addr; // Save client address
 	new_client->state = 0;
 	_clients.push_back(new_client);
 }
@@ -136,21 +127,22 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
 	if (bytes_read < 0)
 	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK){
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		{
 			// Resource temporarily unavailable, try again later
 		}
 		else
 		{
-			std::cerr << "[Server !] Receive error from client fd " << sender_fd << ": " << strerror(errno) << std::endl;
 			close(sender_fd); // Close socket
 			del_from_poll_fds(poll_fds, i, poll_count);
+			throw std::runtime_error("[Server] Receive error from client fd " + std::to_string(sender_fd) + ": " + std::string(strerror(errno)));
 		}
 	}
 	else if (bytes_read == 0)
 	{
 		std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
 		close(sender_fd); // Close socket
-		for(deque_itr it = _clients.begin(); it != _clients.end(); it++)
+		for (deque_itr it = _clients.begin(); it != _clients.end(); it++)
 		{
 			if ((*it)->client_fd == sender_fd)
 			{
@@ -163,40 +155,34 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	}
 	else
 	{
-			deque_itr it = _clients.begin();
-			for (it = _clients.begin(); it != _clients.end(); it++)
+		deque_itr it = _clients.begin();
+		for (it = _clients.begin(); it != _clients.end(); it++)
+		{
+			if ((*it)->client_fd == sender_fd)
+				break;
+		}
+		std::stringstream ss(buffer);
+		std::string line;
+		std::vector<std::string> lines;
+		while (std::getline(ss, line, '\n'))
+			lines.push_back(line);
+		for (std::vector<std::string>::iterator it2 = lines.begin(); it2 != lines.end(); it2++)
+		{
+			if ((*it2).find("PASS") == 0)
 			{
-				if ((*it)->client_fd == sender_fd)
-				{
-					break;
-				}
+				std::string testing = std::string(*it2).substr(5, this->_server.password.length());
+				if (testing == this->_server.password)
+					(*it)->password = true;
+				else
+					std::cout << "password is incorrect" << std::endl;
 			}
-				std::stringstream ss(buffer);
-				std::string line;
-				std::vector<std::string> lines;
-				while (std::getline(ss, line, '\n'))
-				    lines.push_back(line);
-				for(std::vector<std::string>::iterator it2 = lines.begin(); it2 != lines.end(); it2++)
-				{
-					if ((*it2).find("PASS") == 0)
-					{
-						std::string testing = std::string(buffer).substr(5, this->_server.password.length());
-						if(testing == this->_server.password)
-						{
-							std::cout << "password is " << std::string(buffer).substr(5) << std::endl;
-									(*it)->password = true;
-									std::cout << "password is correct" << std::endl;
-						}
-						else
-							std::cout << "password is incorrect" << std::endl;
-					}
-					else if ((*it)->password == true)
-					{
-						std::cout << "dire dakchi zwine" << std::endl;
-					}
-					else
-			 		std::cout << "you need password to connect to server" << std::endl;
-				}
+			else if ((*it)->password == true)
+			{
+				std::cout << "dire dakchi zwine" << std::endl;
+			}
+			else
+				std::cout << "you need password to connect to server" << std::endl;
+		}
 	}
 }
 //****************************************************************

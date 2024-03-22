@@ -1,6 +1,8 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <netinet/in.h> // sockaddr_in
+
 
 class Client {
     public:
@@ -11,6 +13,9 @@ class Client {
     std::string realname;
     bool invited;
     bool password;
+    bool registered;
+	struct sockaddr_in client_addr;
+    char client_ip[INET_ADDRSTRLEN];
     Client();
 
 };
