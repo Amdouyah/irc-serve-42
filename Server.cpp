@@ -90,6 +90,7 @@ Server::~Server()
 {
 }
 
+
 void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, int *poll_count, int *poll_size)
 {
 	int client_fd;
@@ -97,6 +98,7 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
 	client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len); // Accept new connection
+
 	if (client_fd == -1)
 		throw std::runtime_error("[Server] Accept error: " + std::string(strerror(errno)));
 	fcntl(client_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
@@ -109,6 +111,7 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 	Client *new_client = new Client();
 	new_client->client_fd = client_fd;
 	new_client->client_addr = client_addr; // Save client address
+	inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN); // Fix: Include the necessary header file
 	new_client->state = 0;
 	_clients.push_back(new_client);
 }
