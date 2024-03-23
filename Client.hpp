@@ -1,3 +1,6 @@
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
+
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -19,3 +22,5 @@ class Client {
     Client();
 
 };
+
+#endif
