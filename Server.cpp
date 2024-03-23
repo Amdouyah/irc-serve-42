@@ -257,9 +257,22 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 					if ((*chan)->get_name() == std::string(*it2).substr(6))
 					{
 						found = true;
-						if((*chan)->invited.size() && (*chan))
-
-						(*chan)->beta_users.push_back(*it); // adding beta user to containers in server
+						if((*chan)->invited.size() && (*chan)->invitOnly == true)
+						{
+							for (deque_itr it3 = (*chan)->invited.begin(); it3 != (*chan)->invited.end(); it3++)
+							{
+								if ((*it3)->nickname == (*it)->nickname)
+								{
+									(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
+									break;
+								}
+							}
+							std::cout << "you are not invited" << std::endl;
+						}
+						else if((*chan)->invitOnly == false)
+						{
+							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
+						}
 						break;
 					}
 				}
