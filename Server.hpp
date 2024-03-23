@@ -2,6 +2,7 @@
 # define SERVER_HPP
 
 # include <iostream>
+#include "channel.hpp"
 # include <string>
 #include <errno.h>
 #include <netdb.h>
@@ -22,6 +23,7 @@
 #include "Client.hpp"
 #include <deque>
 #define deque_itr std::deque<Client *>::iterator
+#define deque_chan std::deque<channel *>::iterator
 
 struct _server_
 {
@@ -45,13 +47,17 @@ class Server
 		void read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket);
 		void add_to_poll_fds(struct pollfd *poll_fds[], int new_fd, int *poll_count, int *poll_size);
 		void del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count);
-		void regitration(std::vector<std::string>& lines, deque_itr& it);
+		void regitration(std::vector<std::string>& lines, deque_itr& it , std::vector<std::string>::iterator& it2);
+		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
+		int join(deque_itr &it, std::vector<std::string>::iterator &it2);
 
 		~Server();
 	private:
 	int 			_error;
 	std::deque<Client *>	_clients;
 	_server_		_server;
+	std::deque<channel *> _channels;
+
 
 
 };

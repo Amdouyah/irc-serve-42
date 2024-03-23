@@ -2,14 +2,13 @@
 #define CHANNEL_HPP
 
 #include <iostream>
+#include <deque>
 #include "Client.hpp"
 
 class channel{
-	private:
+	public:
 		std::string _name;
 		bool		invitOnly;
-
-		int	 		users;
 
 		bool 		has_pass;
 		std::string 		passwd;
@@ -26,14 +25,14 @@ class channel{
 
 		channel();
 
-	public:
-		//add vector client for members
-		//add vector for admins 
-		//add vector for invited
+
+		std::deque<Client *> alpha_users;
+		std::deque<Client *> beta_users;
+		std::deque<Client *> invited;
 
 
 		channel(std::string name);
-		channel(Client *cretor, std::string name, Client *server);
+		channel(Client *cretor, std::string name);
 		~channel();
 
 		void set_name(std::string name);

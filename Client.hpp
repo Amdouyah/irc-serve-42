@@ -1,5 +1,4 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#pragma once
 
 #include <cstring>
 #include <iostream>
@@ -22,5 +21,3 @@ class Client {
     Client();
 
 };
-
-#endif

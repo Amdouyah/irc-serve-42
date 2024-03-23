@@ -116,47 +116,46 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 }
 //****************************************************************
 
-
-		
-void Server::regitration(std::vector<std::string>& lines, deque_itr& it)
+void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::vector<std::string>::iterator &it2)
 {
-	for (std::vector<std::string>::iterator it2 = lines.begin(); it2 != lines.end(); it2++)
+	for (; it2 != lines.end(); it2++)
+	{
+		if ((*it2).find("PASS") == 0)
 		{
-			if ((*it2).find("PASS") == 0)
+			std::string testing = std::string(*it2).substr(5, this->_server.password.length());
+			if (testing == this->_server.password)
+				(*it)->password = true;
+			else
+				std::cout << "password is incorrect" << std::endl;
+		}
+		else if ((*it)->password == true)
+		{
+			if ((*it)->registered == false)
 			{
-				std::string testing = std::string(*it2).substr(5, this->_server.password.length());
-				if (testing == this->_server.password)
-					(*it)->password = true;
-				else
-					std::cout << "password is incorrect" << std::endl;
-			}
-			else if ((*it)->password == true)
-			{
-				if ((*it)->registered == false)
+				if ((*it2).find("NICK") == 0)
+					(*it)->nickname = std::string(*it2).substr(5);
+				else if ((*it2).find("USER") == 0)
 				{
-					if ((*it2).find("NICK") == 0)
-						(*it)->nickname = std::string(*it2).substr(5);
-					else if ((*it2).find("USER") == 0)
+					int i = 0;
+					std::stringstream sss((*it2).substr(5));
+					std::string parm;
+					std::vector<std::string> parms;
+					std::vector<std::string> final;
+					while (std::getline(sss, parm, ' '))
+						parms.push_back(parm);
+					std::vector<std::string>::iterator it3 = parms.begin();
+					while ((*it3).find(":") != 0 && it3 != parms.end())
 					{
-						int i = 0;
-						std::stringstream sss((*it2).substr(5));
-						std::string parm;
-						std::vector<std::string> parms;
-						std::vector<std::string> final;
-						while (std::getline(sss, parm, ' '))
-							parms.push_back(parm);
-						std::vector<std::string>::iterator it3 = parms.begin();
-						while ((*it3).find(":") != 0 && it3 != parms.end())
-						{
-							i++;
-							final.push_back(*it3);
-							it3++;
-						}
-						if (i != 3 || (*it3).find(":") == std::string::npos)
-						{
-							std::cout << "you need more parametre" << std::endl;
-						}
-						else{
+						i++;
+						final.push_back(*it3);
+						it3++;
+					}
+					if (i != 3 || (*it3).find(":") == std::string::npos)
+					{
+						std::cout << "you need more parametre" << std::endl;
+					}
+					else
+					{
 						std::string realname;
 						while (it3 != parms.end())
 						{
@@ -166,18 +165,131 @@ void Server::regitration(std::vector<std::string>& lines, deque_itr& it)
 						final.push_back(realname);
 						(*it)->username = final[0];
 						(*it)->realname = final[3];
-						(*it)->registered = true;
-						std::cout << "you are registered" << std::endl;
-						}
 					}
-					else
-						std::cout << "you need to register" << std::endl;
+				}
+				else
+					std::cout << "you need to register" << std::endl;
+				if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
+				{
+					(*it)->registered = true;
+					std::cout << "you are registered" << std::endl;
 				}
 			}
-			else
-				std::cout << "you need password to connect to server" << std::endl;
 		}
+		else
+			std::cout << "you need password to connect to server" << std::endl;
+	}
+}
 
+int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
+{
+	int dest_fd;
+	int status;
+	if ((*it2).find("PRIVMSG") == 0)
+	{
+		std::string dest = std::string(*it2).substr(8, std::string(*it2).find(" ", 8) - 8);
+		std::string msg = std::string(*it2).substr(std::string(*it2).find(":", 8) + 1);
+		if (dest.find("#") == 0)
+		{
+			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
+			{
+				if ((*chan)->get_name() == dest.substr(1))
+				{
+					for (deque_itr it3 = (*chan)->alpha_users.begin(); it3 != (*chan)->alpha_users.end(); it3++)
+					{
+						std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+						status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+						if (status == -1)
+							throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
+					}
+					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); it3++)
+					{
+						std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+						status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+						if (status == -1)
+							throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
+					}
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (deque_itr it3 = _clients.begin(); it3 != _clients.end();)
+			{
+				if ((*it3)->nickname == dest)
+				{
+					dest_fd = (*it3)->client_fd;
+					break;
+				}
+				it3++;
+				if (it3 == _clients.end())
+					dest_fd = 0;
+			}
+			if (dest_fd == 0)
+				std::cout << "user not found" << std::endl;
+			else
+			{
+				std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+				status = send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				if (status == -1)
+					throw std::runtime_error("[Server] Send error to client fd " + std::to_string(dest_fd) + ": " + std::string(strerror(errno)));
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
+int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("JOIN") == 0)
+	{
+		if ((*it2).find("#") == 5)
+		{
+			bool found = false;
+			if (_channels.size() > 0)
+			{
+				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
+				{
+					if ((*chan)->get_name() == std::string(*it2).substr(6))
+					{
+						found = true;
+						if((*chan)->invitOnly == true)
+						{
+							for (deque_itr it3 = (*chan)->invited.begin(); it3 != (*chan)->invited.end(); it3++)
+							{
+								if ((*it3)->nickname == (*it)->nickname)
+								{
+									(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
+									break;
+								}
+							}
+							std::cout << "you are not invited" << std::endl;
+						}
+						else if((*chan)->invitOnly == false)
+						{
+							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
+						}
+						break;
+					}
+				}
+			}
+			if (found == false)
+			{
+				std::string channel_name = std::string(*it2).substr(6);
+				channel *new_channel = new channel(channel_name);
+				new_channel->alpha_users.push_back(*it);
+				std::cout << "channel created"
+						  << "with name " << new_channel->_name << std::endl;
+				_channels.push_back(new_channel);
+			}
+		}
+		else
+			std::cout << "channel name must start with #" << std::endl;
+		return 1;
+	}
+	return 0;
 }
 
 void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket)
@@ -185,16 +297,16 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	char buffer[BUFSIZ];
 	char msg_to_send[BUFSIZ];
 	int bytes_read;
-	int status;
-	int dest_fd;
 	int sender_fd;
 	sender_fd = (*poll_fds)[i].fd;
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
 	if (bytes_read < 0)
 	{
-			
-		if (errno == EAGAIN || errno == EWOULDBLOCK){}// wa7ad mochkila dial fach katbghi tconnecta awtani kigolo lik resourse not available prabably 9aditha be socketopt walakine jat to be sure 
+
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		{
+		} // wa7ad mochkila dial fach katbghi tconnecta awtani kigolo lik resourse not available prabably 9aditha be socketopt walakine jat to be sure
 		else
 		{
 			close(sender_fd); // Close socket
@@ -230,8 +342,21 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 		std::vector<std::string> lines;
 		while (std::getline(ss, line, '\n'))
 			lines.push_back(line);
-		regitration(lines, it);
-		
+		std::vector<std::string>::iterator it2 = lines.begin();
+		if ((*it)->registered == false)
+			regitration(lines, it, it2);
+		else
+		{
+			for (; it2 != lines.end(); it2++)
+			{
+				if (privmsg(it2, it) == 1)
+					continue;
+				else if (join(it, it2) == 1)
+					continue;
+				else
+					std::cout << "command unkown" << std::endl;
+			}
+		}
 	}
 }
 //****************************************************************
