@@ -193,7 +193,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		{
 			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 			{
-				if ((*chan)->_name == dest.substr(1))
+				if ((*chan)->get_name() == dest.substr(1))
 				{
 					for (deque_itr it3 = (*chan)->alpha_users.begin(); it3 != (*chan)->alpha_users.end(); it3++)
 					{
@@ -236,6 +236,46 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 					throw std::runtime_error("[Server] Send error to client fd " + std::to_string(dest_fd) + ": " + std::string(strerror(errno)));
 			}
 		}
+		return 1;
+	}
+	return 0;
+}
+
+int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("JOIN") == 0)
+	{
+		if ((*it2).find("#") == 5)
+		{
+			bool found = false;
+			if (_channels.size() > 0)
+			{
+				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
+				{
+					std::cout << std::string(*it2).substr(6);
+					std::cout << " " << (*chan)->get_name() << std::endl;
+					if ((*chan)->get_name() == std::string(*it2).substr(6))
+					{
+						found = true;
+						if((*chan)->invited.size() && (*chan))
+
+						(*chan)->beta_users.push_back(*it); // adding beta user to containers in server
+						break;
+					}
+				}
+			}
+			if (found == false)
+			{
+				std::string channel_name = std::string(*it2).substr(6);
+				channel *new_channel = new channel(channel_name);
+				new_channel->alpha_users.push_back(*it);
+				std::cout << "channel created"
+						  << "with name " << new_channel->_name << std::endl;
+				_channels.push_back(new_channel);
+			}
+		}
+		else
+			std::cout << "channel name must start with #" << std::endl;
 		return 1;
 	}
 	return 0;
@@ -300,39 +340,10 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 			{
 				if (privmsg(it2, it) == 1)
 					continue;
+				else if (join(it, it2) == 1)
+					continue;
 				else
-				{
-					if ((*it2).find("JOIN") == 0)
-					{
-						if ((*it2).find("#") == 5)
-						{
-							if (_channels.size() > 0)
-							{
-								for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
-								{
-									std::cout << std::string(*it2).substr(6) ;
-									std::cout << " " << (*chan)->_name << std::endl;
-									if ((*chan)->_name == std::string(*it2).substr(6))
-									{
-										(*chan)->beta_users.push_back(*it);
-										break;
-									}
-								}
-							}
-							else
-							{
-								std::string channel_name = std::string(*it2).substr(6);
-								channel *new_channel = new channel(channel_name);
-								new_channel->alpha_users.push_back(*it);
-								std::cout << "channel created"
-										  << "with name " << new_channel->_name << std::endl;
-								_channels.push_back(new_channel);
-							}
-						}
-						else
-							std::cout << "channel name must start with #" << std::endl;
-					}
-				}
+					std::cout << "command unkown" << std::endl;
 			}
 		}
 	}

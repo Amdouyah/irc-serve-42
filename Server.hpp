@@ -49,6 +49,8 @@ class Server
 		void del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count);
 		void regitration(std::vector<std::string>& lines, deque_itr& it , std::vector<std::string>::iterator& it2);
 		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
+		int join(deque_itr &it, std::vector<std::string>::iterator &it2);
+
 		~Server();
 	private:
 	int 			_error;
