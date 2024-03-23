@@ -5,5 +5,6 @@ channel::channel(){
 }
 channel::~channel(){
 }
-channel::channel(std::string name) : _name(name){
+channel::channel(std::string name) {
+	this->_name = name;
 }

@@ -193,7 +193,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		{
 			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 			{
-				if ((*chan)->_name == dest)
+				if ((*chan)->_name == dest.substr(1))
 				{
 					for (deque_itr it3 = (*chan)->alpha_users.begin(); it3 != (*chan)->alpha_users.end(); it3++)
 					{
@@ -310,7 +310,9 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 							{
 								for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 								{
-									if ((*chan)->_name == std::string(*it2).substr(5))
+									std::cout << std::string(*it2).substr(6) ;
+									std::cout << " " << (*chan)->_name << std::endl;
+									if ((*chan)->_name == std::string(*it2).substr(6))
 									{
 										(*chan)->beta_users.push_back(*it);
 										break;

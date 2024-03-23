@@ -2,7 +2,7 @@
 #define CHANNEL_HPP
 
 #include <iostream>
-#include "client.hpp"
+#include "Client.hpp"
 #include <deque>
 
 class channel{
