@@ -181,13 +181,71 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 	}
 }
 
+int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
+{
+	int dest_fd;
+	int status;
+	if ((*it2).find("PRIVMSG") == 0)
+	{
+		std::string dest = std::string(*it2).substr(8, std::string(*it2).find(" ", 8) - 8);
+		std::string msg = std::string(*it2).substr(std::string(*it2).find(":", 8) + 1);
+		if (dest.find("#") == 0)
+		{
+			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
+			{
+				if ((*chan)->_name == dest)
+				{
+					for (deque_itr it3 = (*chan)->alpha_users.begin(); it3 != (*chan)->alpha_users.end(); it3++)
+					{
+						std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+						status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+						if (status == -1)
+							throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
+					}
+					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); it3++)
+					{
+						std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+						status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+						if (status == -1)
+							throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
+					}
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (deque_itr it3 = _clients.begin(); it3 != _clients.end();)
+			{
+				if ((*it3)->nickname == dest)
+				{
+					dest_fd = (*it3)->client_fd;
+					break;
+				}
+				it3++;
+				if (it3 == _clients.end())
+					dest_fd = 0;
+			}
+			if (dest_fd == 0)
+				std::cout << "user not found" << std::endl;
+			else
+			{
+				std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
+				status = send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				if (status == -1)
+					throw std::runtime_error("[Server] Send error to client fd " + std::to_string(dest_fd) + ": " + std::string(strerror(errno)));
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
 void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket)
 {
 	char buffer[BUFSIZ];
 	char msg_to_send[BUFSIZ];
 	int bytes_read;
-	int status;
-	int dest_fd;
 	int sender_fd;
 	sender_fd = (*poll_fds)[i].fd;
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
@@ -240,29 +298,37 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 		{
 			for (; it2 != lines.end(); it2++)
 			{
-				if ((*it2).find("PRIVMSG") == 0)
+				if (privmsg(it2, it) == 1)
+					continue;
+				else
 				{
-					std::string dest = std::string(*it2).substr(8, std::string(*it2).find(" ", 8) - 8);
-					std::string msg = std::string(*it2).substr(std::string(*it2).find(":", 8) + 1);
-					for (deque_itr it3 = _clients.begin(); it3 != _clients.end();)
+					if ((*it2).find("JOIN") == 0)
 					{
-						if ((*it3)->nickname == dest)
+						if ((*it2).find("#") == 5)
 						{
-							dest_fd = (*it3)->client_fd;
-							break;
+							if (_channels.size() > 0)
+							{
+								for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
+								{
+									if ((*chan)->_name == std::string(*it2).substr(5))
+									{
+										(*chan)->beta_users.push_back(*it);
+										break;
+									}
+								}
+							}
+							else
+							{
+								std::string channel_name = std::string(*it2).substr(6);
+								channel *new_channel = new channel(channel_name);
+								new_channel->alpha_users.push_back(*it);
+								std::cout << "channel created"
+										  << "with name " << new_channel->_name << std::endl;
+								_channels.push_back(new_channel);
+							}
 						}
-						it3++;
-						if (it3 == _clients.end())
-							dest_fd = 0;
-					}
-					if (dest_fd == 0)
-						std::cout << "user not found" << std::endl;
-					else
-					{
-						std::string msg_to_send = (*it)->nickname + " : " + msg + "\n";
-						status = send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-						if (status == -1)
-							throw std::runtime_error("[Server] Send error to client fd " + std::to_string(dest_fd) + ": " + std::string(strerror(errno)));
+						else
+							std::cout << "channel name must start with #" << std::endl;
 					}
 				}
 			}
