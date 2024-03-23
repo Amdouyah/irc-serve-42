@@ -252,12 +252,10 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			{
 				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 				{
-					std::cout << std::string(*it2).substr(6);
-					std::cout << " " << (*chan)->get_name() << std::endl;
 					if ((*chan)->get_name() == std::string(*it2).substr(6))
 					{
 						found = true;
-						if((*chan)->invited.size() && (*chan)->invitOnly == true)
+						if((*chan)->invitOnly == true)
 						{
 							for (deque_itr it3 = (*chan)->invited.begin(); it3 != (*chan)->invited.end(); it3++)
 							{
