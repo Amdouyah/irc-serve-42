@@ -1,5 +1,12 @@
 #include "Server.hpp"
 
+void Server::signal_handler(int sig)
+{
+	(void)sig;
+	std::cout << "Signal received" << std::endl;
+	Server::_shutdown = true;
+}
+
 int Server::create_server_socket(void)
 {
 	struct sockaddr_in sa;
@@ -41,6 +48,7 @@ int Server::create_server_socket(void)
 
 Server::Server(int port, std::string password)
 {
+	this->_shutdown = false;
 	this->_error = 0;
 	this->_server.port = port;
 	this->_server.password = password;
@@ -63,8 +71,12 @@ void Server::start()
 	{
 		status = poll(this->_server.poll_fds, this->_server.poll_count, 2000);
 		if (status == -1)
-			throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
-
+		{
+			 if (errno == EINTR)
+            	continue;
+			else
+				throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
+		}
 		else if (status == 0)
 			continue;
 
@@ -241,6 +253,15 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 	return 0;
 }
 
+void Server::setbuffer(std::string msg_to_send, int dest_fd)
+{
+	int ret;
+	if ((ret = send(dest_fd, msg_to_send.c_str(), msg_to_send.size(), 0)) == -1)
+		throw std::runtime_error("send failed");
+	if (ret != (int)msg_to_send.size())
+		throw std::runtime_error("send failed: not all bytes sent");
+}
+
 int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("JOIN") == 0)
@@ -255,7 +276,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 					if ((*chan)->get_name() == std::string(*it2).substr(6))
 					{
 						found = true;
-						if((*chan)->invitOnly == true)
+						if ((*chan)->invitOnly == true)
 						{
 							for (deque_itr it3 = (*chan)->invited.begin(); it3 != (*chan)->invited.end(); it3++)
 							{
@@ -267,7 +288,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 							}
 							std::cout << "you are not invited" << std::endl;
 						}
-						else if((*chan)->invitOnly == false)
+						else if ((*chan)->invitOnly == false)
 						{
 							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
 						}

@@ -50,10 +50,13 @@ class Server
 		void regitration(std::vector<std::string>& lines, deque_itr& it , std::vector<std::string>::iterator& it2);
 		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
 		int join(deque_itr &it, std::vector<std::string>::iterator &it2);
+		void setbuffer(std::string msg_to_send, int dest_fd);
+		static void signal_handler(int sig);
 
 		~Server();
 	private:
 	int 			_error;
+	static bool _shutdown;
 	std::deque<Client *>	_clients;
 	_server_		_server;
 	std::deque<channel *> _channels;
