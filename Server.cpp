@@ -3,7 +3,6 @@
 void Server::signal_handler(int sig)
 {
 	(void)sig;
-	std::cout << "Signal received" << std::endl;
 	Server::_shutdown = true;
 }
 
@@ -69,6 +68,12 @@ void Server::start()
 	this->_server.poll_count = 1;
 	while (1)
 	{
+		if(Server::_shutdown)
+		{
+			std::cout << "[Server] Shutting down..." << std::endl;
+			close(this->_server.server_socket);
+			break;
+		}
 		status = poll(this->_server.poll_fds, this->_server.poll_count, 2000);
 		if (status == -1)
 		{
