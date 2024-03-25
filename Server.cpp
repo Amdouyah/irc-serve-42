@@ -182,6 +182,8 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						}
 						final.push_back(realname);
 						(*it)->username = final[0];
+						(*it)->hostname = final[1];
+						(*it)->servername = final[2];
 						(*it)->realname = final[3];
 					}
 				}
@@ -381,8 +383,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 					continue;
 				else if (join(it, it2) == 1)
 					continue;
-				
-
+				// else if(kick_server(it, it2) == 1)
+				// 	continue;
 				else
 					std::cout << "command unkown" << std::endl;
 			}
