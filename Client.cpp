@@ -9,4 +9,8 @@ Client::Client()
     this->username = "";
     this->nickname = "";
     this->realname = "";
+    this->hostname = "";
+    this->servername = "";
 }
+//khass t3mer ela had chkel : USERname ,  hostname , servername, realname;
+//fash tparsi USER ghady ikhsni hta lhost o server

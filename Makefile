@@ -1,5 +1,5 @@
 NAME = a.out
-SRC = main.cpp Server.cpp Client.cpp channel.cpp
+SRC = main.cpp Server.cpp Client.cpp 
 
 all : $(NAME)
 

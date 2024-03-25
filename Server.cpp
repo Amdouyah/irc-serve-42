@@ -164,6 +164,8 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						}
 						final.push_back(realname);
 						(*it)->username = final[0];
+						(*it)->hostname = final[1];
+						(*it)->servername = final[2];
 						(*it)->realname = final[3];
 					}
 				}
