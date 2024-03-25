@@ -381,6 +381,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 					continue;
 				else if (join(it, it2) == 1)
 					continue;
+				// else if(kick_server(it, it2) == 1)
+				// 	continue;
 				else
 					std::cout << "command unkown" << std::endl;
 			}
