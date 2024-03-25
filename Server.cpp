@@ -130,6 +130,7 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 	inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN); // Fix: Include the necessary header file
 	new_client->state = 0;
 	_clients.push_back(new_client);
+
 }
 //****************************************************************
 
@@ -327,18 +328,19 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	sender_fd = (*poll_fds)[i].fd;
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
+	buffer[bytes_read] = '\0';
 	if (bytes_read < 0)
 	{
 
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-		} // wa7ad mochkila dial fach katbghi tconnecta awtani kigolo lik resourse not available prabably 9aditha be socketopt walakine jat to be sure
-		else
+
+		if ((*poll_fds)[i].revents & (POLLHUP | POLLERR))
 		{
 			close(sender_fd); // Close socket
 			del_from_poll_fds(poll_fds, i, poll_count);
-			throw std::runtime_error("[Server] Receive error from client fd " + std::to_string(sender_fd) + ": " + std::string(strerror(errno)));
+			std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
 		}
+		else
+			throw std::runtime_error("[Server] Receive error from client fd " + std::to_string(sender_fd) + ": " + std::string(strerror(errno)));
 	}
 	else if (bytes_read == 0)
 	{
@@ -379,6 +381,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 					continue;
 				else if (join(it, it2) == 1)
 					continue;
+				
+
 				else
 					std::cout << "command unkown" << std::endl;
 			}
