@@ -56,29 +56,27 @@ Server::Server(int port, std::string password)
 void Server::start()
 {
 	int status;
+	struct pollfd poll;
 	this->_server.server_socket = create_server_socket();
 	if (this->_server.server_socket == -1)
 		throw std::runtime_error("[Server] Error creating server socket");
-	this->_server.poll_size = 5;
-	this->_server.poll_fds = (struct pollfd *)calloc(this->_server.poll_size + 1, sizeof *this->_server.poll_fds);
-	if (!this->_server.poll_fds)
-		throw std::runtime_error("[Server] Error allocating memory for poll_fds");
-	this->_server.poll_fds[0].fd = this->_server.server_socket;
-	this->_server.poll_fds[0].events = POLLIN;
+	poll.fd = this->_server.server_socket;
+	poll.events = POLLIN;
 	this->_server.poll_count = 1;
+	this->_server.poll_fds.push_back(poll);
 	while (1)
 	{
-		if(Server::_shutdown)
+		if (Server::_shutdown)
 		{
 			std::cout << "[Server] Shutting down..." << std::endl;
 			close(this->_server.server_socket);
 			break;
 		}
-		status = poll(this->_server.poll_fds, this->_server.poll_count, 2000);
+		status = ::poll(&this->_server.poll_fds[0], this->_server.poll_count, 2000);
 		if (status == -1)
 		{
-			 if (errno == EINTR)
-            	continue;
+			if (errno == EINTR)
+				continue;
 			else
 				throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
 		}
@@ -87,17 +85,16 @@ void Server::start()
 
 		for (int i = 0; i < this->_server.poll_count; i++)
 		{
-			if ((this->_server.poll_fds[i].revents & POLLIN) != 1)
+			if ((this->_server.poll_fds[i].revents & POLLIN))
 			{
-				continue;
-			}
-			if (this->_server.poll_fds[i].fd == this->_server.server_socket)
-			{
-				accept_new_connection(this->_server.server_socket, &this->_server.poll_fds, &this->_server.poll_count, &this->_server.poll_size);
-			}
-			else
-			{
-				read_data_from_socket(i, &this->_server.poll_fds, &this->_server.poll_count, this->_server.server_socket);
+				if (this->_server.poll_fds[i].fd == this->_server.server_socket)
+				{
+					accept_new_connection(this->_server.server_socket);
+				}
+				else
+				{
+					read_data_from_socket(i);
+				}
 			}
 		}
 	}
@@ -107,7 +104,7 @@ Server::~Server()
 {
 }
 
-void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, int *poll_count, int *poll_size)
+void Server::accept_new_connection(int server_socket)
 {
 	int client_fd;
 	int status;
@@ -118,7 +115,7 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 	if (client_fd == -1)
 		throw std::runtime_error("[Server] Accept error: " + std::string(strerror(errno)));
 	fcntl(client_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
-	add_to_poll_fds(poll_fds, client_fd, poll_count, poll_size);
+	add_to_poll_fds(client_fd);
 	// Send welcome message to client
 	std::string msg_to_send = "Welcome to irc server \n";
 	status = send(client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
@@ -130,7 +127,6 @@ void Server::accept_new_connection(int server_socket, struct pollfd **poll_fds, 
 	inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN); // Fix: Include the necessary header file
 	new_client->state = 0;
 	_clients.push_back(new_client);
-
 }
 //****************************************************************
 
@@ -182,8 +178,8 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						}
 						final.push_back(realname);
 						(*it)->username = final[0];
-						(*it)->hostname = final[1];
-						(*it)->servername = final[2];
+						// (*it)->hostname = final[1];
+						// (*it)->servername = final[2];
 						(*it)->realname = final[3];
 					}
 				}
@@ -270,6 +266,31 @@ void Server::setbuffer(std::string msg_to_send, int dest_fd)
 		throw std::runtime_error("send failed: not all bytes sent");
 }
 
+int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	int i = 0;
+	int a = 0;
+	if((*it2).find("KICK") == 0)
+	{
+		while(1)
+		{
+			a = (*it2).find(" ", a + 1);
+			i++;
+			if(a == std::string::npos || i >= 2)
+				break;
+		}
+		if(i != 2)
+		{
+			std::cout << "you need more parametre" << std::endl;
+			return 1;
+		}
+		std::string channnel_name = std::string((*it2).substr(5, (*it2).find(" ", 5) - 5));
+		std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
+	}
+
+	return 0;
+}
+
 int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("JOIN") == 0)
@@ -321,43 +342,33 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 	return 0;
 }
 
-void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_count, int server_socket)
+void Server::read_data_from_socket(int i)
 {
 	char buffer[BUFSIZ];
 	char msg_to_send[BUFSIZ];
 	int bytes_read;
 	int sender_fd;
-	sender_fd = (*poll_fds)[i].fd;
+	sender_fd = this->_server.poll_fds[i].fd;
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
 	buffer[bytes_read] = '\0';
-	if (bytes_read < 0)
+	if (bytes_read <= 0)
 	{
-
-
-		if ((*poll_fds)[i].revents & (POLLHUP | POLLERR))
+		if(bytes_read == 0)
 		{
-			close(sender_fd); // Close socket
-			del_from_poll_fds(poll_fds, i, poll_count);
 			std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
-		}
-		else
-			throw std::runtime_error("[Server] Receive error from client fd " + std::to_string(sender_fd) + ": " + std::string(strerror(errno)));
-	}
-	else if (bytes_read == 0)
-	{
-		std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
-		close(sender_fd); // Close socket
-		for (deque_itr it = _clients.begin(); it != _clients.end(); it++)
-		{
-			if ((*it)->client_fd == sender_fd)
+			close(sender_fd); // Close socket
+			for (deque_itr it = _clients.begin(); it != _clients.end(); it++)
 			{
-				delete *it;
-				_clients.erase(it);
-				break;
+				if ((*it)->client_fd == sender_fd)
+				{
+					delete *it;
+					_clients.erase(it);
+					break;
+				}
 			}
+			del_from_poll_fds( i);
 		}
-		del_from_poll_fds(poll_fds, i, poll_count);
 	}
 	else
 	{
@@ -383,8 +394,8 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 					continue;
 				else if (join(it, it2) == 1)
 					continue;
-				// else if(kick_server(it, it2) == 1)
-				// 	continue;
+				else if(kick_server(it,it2) == 1)
+					continue;
 				else
 					std::cout << "command unkown" << std::endl;
 			}
@@ -392,21 +403,16 @@ void Server::read_data_from_socket(int i, struct pollfd **poll_fds, int *poll_co
 	}
 }
 //****************************************************************
-void Server::add_to_poll_fds(struct pollfd *poll_fds[], int new_fd, int *poll_count, int *poll_size)
+void Server::add_to_poll_fds( int new_fd)
 {
-	// If there is not enough room, reallocate the poll_fds array
-	if (*poll_count == *poll_size)
-	{
-		*poll_size *= 2; // Double its size
-		*poll_fds = (pollfd *)realloc(*poll_fds, sizeof(**poll_fds) * (*poll_size));
-	}
-	(*poll_fds)[*poll_count].fd = new_fd;
-	(*poll_fds)[*poll_count].events = POLLIN;
-	(*poll_count)++;
+	struct pollfd new_poll_fds;
+	new_poll_fds.fd = new_fd;
+	new_poll_fds.events = POLLIN;
+	this->_server.poll_count++;
+	this->_server.poll_fds.push_back(new_poll_fds);
 }
-void Server::del_from_poll_fds(struct pollfd **poll_fds, int i, int *poll_count)
+void Server::del_from_poll_fds(int i)
 {
-	// Copy the fd from the end of the array to this index
-	(*poll_fds)[i] = (*poll_fds)[*poll_count - 1];
-	(*poll_count)--;
+	this->_server.poll_fds.erase(this->_server.poll_fds.begin() + i);
+	this->_server.poll_count--;
 }
