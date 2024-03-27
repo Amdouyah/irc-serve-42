@@ -292,13 +292,15 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 			std::cout << "you need more parametre" << std::endl;
 			return 1;
 		}
-		std::string channnel_name = std::string((*it2).substr(5, (*it2).find(" ", 5) - 5));
+		std::string channnel_name = std::string((*it2).substr(6, (*it2).find(" ", 6) - 6));
         std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
 		deque_chan chanel = this->_channels.begin();
 		bool found = false;
+		std::cout << channnel_name <<channnel_name.length()<<"\n";
 		for(; chanel != this->_channels.end(); chanel++)
 		{
-			if((*chanel)->get_name() == channnel_name)
+			std::cout << (*chanel)->get_name() <<(*chanel)->get_name().length() << "\n";
+			if((*chanel)->get_name() == channnel_name.c_str())
 			{
 				found = true;
 				break;
@@ -311,8 +313,10 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		}
 		found = false;
 		deque_itr kicker = this->_clients.begin();
+		std::cout << target <<target.length()<<"\n";
 		for(; kicker != this->_clients.end(); kicker++)
 		{
+			std::cout << (*kicker)->nickname <<(*kicker)->nickname.length()<<"\n";
 			if((*kicker)->nickname == target)
 			{
 				found = true;
@@ -329,7 +333,7 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		{
 			int status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			if(status == -1)
-				throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno));
+				throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
 		}
 		
 	}
