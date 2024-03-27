@@ -9,4 +9,6 @@ Client::Client()
     this->username = "";
     this->nickname = "";
     this->realname = "";
+    this->servername = "";
+    this->hostname = "";
 }

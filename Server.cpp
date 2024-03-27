@@ -178,8 +178,8 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						}
 						final.push_back(realname);
 						(*it)->username = final[0];
-						// (*it)->hostname = final[1];
-						// (*it)->servername = final[2];
+						(*it)->hostname = final[1];
+						(*it)->servername = final[2];
 						(*it)->realname = final[3];
 					}
 				}
@@ -292,8 +292,9 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 			std::cout << "you need more parametre" << std::endl;
 			return 1;
 		}
-		std::string channnel_name = std::string((*it2).substr(5, (*it2).find(" ", 5) - 5));
-		std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
+		// client li ghay kicky
+		// client l ghay tkicka
+		
 	}
 
 	return 0;

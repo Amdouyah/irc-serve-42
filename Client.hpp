@@ -12,6 +12,8 @@ class Client {
     int state;
     std::string username;
     std:: string nickname;
+    std::string hostname;
+    std::string servername;
     std::string realname;
     bool invited;
     bool password;
