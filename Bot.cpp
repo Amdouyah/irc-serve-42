@@ -1,0 +1,63 @@
+#include "Bot.hpp"
+
+Bot::Bot()
+{
+    _name = "johny";
+}
+
+std::string Bot::game(deque_itr it, std::string msg)
+{
+    bool flag = false;
+    deque_player tmp = _players.begin();
+    for (; tmp != _players.end(); tmp++)
+    {
+        if (tmp->name == (*it)->nickname)
+        {
+            flag = true;
+            break;
+        }
+    }
+    if (flag == true)
+    {
+        int guess = std::stoi(msg);
+        if (guess == tmp->number)
+        {
+            std::string rtrn = std::string("Congratulations ") + (*it)->nickname + std::string(" you guessed the number in ") + std::to_string(tmp->tries) + std::string(" tries \n");
+            _players.erase(tmp);
+            return rtrn;
+        }
+        else if (guess > tmp->number)
+        {
+            tmp->tries++;
+            if (tmp->tries < 7)
+            {
+                return std::string("The number is lower than ") + std::to_string(guess) + std::string("\n");
+            }
+        }
+        else
+        {
+            tmp->tries++;
+            if (tmp->tries < 7)
+            {
+                return std::string("The number is higher than ") + std::to_string(guess)+ std::string("\n");
+            }
+        }
+        if (tmp->tries == 7)
+        {
+            std::string rtrn = std::string("Sorry ") + (*it)->nickname + std::string(" you have used all your tries, the number was ") + std::to_string(tmp->number)+ std::string("\n");
+            _players.erase(tmp);
+            return rtrn;
+        }
+    }
+    else
+    {
+        players temp;
+        temp.name = (*it)->nickname;
+        temp.tries = 0;
+        temp.number = rand() % 500;
+        _players.push_back(temp);
+        std::string rtrn = std::string("Welcome to the game ") + (*it)->nickname + std::string(" I have a number between 0 and 500, try to guess it, you have 7 tries.\n i will tell you if the number is higher or lower than the one you guessed, good luck");
+        return rtrn;
+    }
+    return "";
+}

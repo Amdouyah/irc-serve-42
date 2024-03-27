@@ -4,6 +4,7 @@
 # include <iostream>
 #include "channel.hpp"
 # include <string>
+#include "Bot.hpp"
 #include <errno.h>
 #include <netdb.h>
 #include <poll.h>
@@ -60,6 +61,7 @@ class Server
 	private:
 	int 			_error;
 	static bool _shutdown;
+	Bot _bot;
 	std::deque<Client *>	_clients;
 	_server_		_server;
 	std::deque<channel *> _channels;

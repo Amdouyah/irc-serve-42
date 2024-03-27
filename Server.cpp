@@ -229,6 +229,14 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 				}
 			}
 		}
+		else if(dest  == "jhonny")
+		{
+
+			std::string msg_to_send = this->_bot.game(it, msg);
+			status = send((*it)->client_fd, (msg_to_send.c_str()), msg_to_send.length(), 0);
+			if (status == -1)
+				throw std::runtime_error("[Server] Send error to client fd " + std::to_string(1) + ": " + std::string(strerror(errno)));
+		}
 		else
 		{
 			for (deque_itr it3 = _clients.begin(); it3 != _clients.end();)
