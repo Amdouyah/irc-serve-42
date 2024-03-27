@@ -292,6 +292,10 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 			std::cout << "you need more parametre" << std::endl;
 			return 1;
 		}
+		for(deque_chan chanel = this->_channels.begin(); chanel != this->_channels.end(); chanel++)
+		{
+			if((*chanel)->get_name() == )
+		}
 		// client li ghay kicky
 		// client l ghay tkicka
 		
