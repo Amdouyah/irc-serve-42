@@ -5,9 +5,12 @@
 #include <deque>
 #include "Client.hpp"
 
-#define ERR_USERNOTINCHANNEL(client, nick, chan) 	("441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n");
-#define ERR_NOTONCHANNEL(client, chan)  			("442" + client + " " + chan +  " :You're not on that channel\r\n");
-#define ERR_CHANOPRIVSNEEDED(client, chan)			("482" + client + " " + chan +  " :You're not channel operator\r\n")
+#define ERR_USERNOTINCHANNEL(client, nick, chan) 		("441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n");
+#define ERR_NOTONCHANNEL(client, chan)  				("442" + client + " " + chan +  " :You're not on that channel\r\n");
+#define ERR_CHANOPRIVSNEEDED(client, chan)				("482" + client + " " + chan +  " :You're not channel operator\r\n");
+#define ERR_USERONCHANNEL(client, nick, chan)			("443" + client + " " + nick + " " + chan +  " :is already on channel\r\n");
+
+
 class channel{
 	public:
 		std::string _name;
@@ -50,8 +53,10 @@ class channel{
 		int 		get_maxUsers();
 		bool 		onChannel(Client *cli);
 		bool		isAlpha(Client *cli);
+		bool		isInvit(Client *cli);
 
 		std::string 	KICK(Client *admin, Client *cli);
+		std::string		INVITE(Client *admin, Client *cli);
 		void	rmvUser(Client *cli);
 
 		
