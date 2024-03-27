@@ -292,12 +292,45 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 			std::cout << "you need more parametre" << std::endl;
 			return 1;
 		}
-		for(deque_chan chanel = this->_channels.begin(); chanel != this->_channels.end(); chanel++)
+		std::string channnel_name = std::string((*it2).substr(5, (*it2).find(" ", 5) - 5));
+        std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
+		deque_chan chanel = this->_channels.begin();
+		bool found = false;
+		for(; chanel != this->_channels.end(); chanel++)
 		{
-			if((*chanel)->get_name() == )
+			if((*chanel)->get_name() == channnel_name)
+			{
+				found = true;
+				break;
+			}
 		}
-		// client li ghay kicky
-		// client l ghay tkicka
+		if(found == false)
+		{
+			std::cout << "channel not found" << std::endl;
+			return 1;
+		}
+		found = false;
+		deque_itr kicker = this->_clients.begin();
+		for(; kicker != this->_clients.end(); kicker++)
+		{
+			if((*kicker)->nickname == target)
+			{
+				found = true;
+				break;
+			}
+		}
+		if(found == false)
+		{
+			std::cout << "user not found" << std::endl;
+			return 1;
+		}	
+		std::string msg_to_send = (*chanel)->KICK(*it, *kicker);
+		for(deque_itr it3 = (*chanel)->alpha_users.begin(); it3 != (*chanel)->alpha_users.end(); it3++)
+		{
+			int status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			if(status == -1)
+				throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno));
+		}
 		
 	}
 
