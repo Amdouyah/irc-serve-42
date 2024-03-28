@@ -89,18 +89,21 @@ void	channel::rmvUser(Client *cli){
 }
 
 std::string		channel::INVITE(Client *admin, Client *cli){
+	
 	if (!this->onChannel(admin)){
 		 return getUserInfo(admin, false) + ERR_NOTONCHANNEL(admin->nickname, this->get_name());
 	}
 	else if(this->onChannel(cli)){
-		// return getUserInfo(cli, false) + ERR_USERONCHANNEL(cli, )
+		return getUserInfo(cli, false) + ERR_USERONCHANNEL(admin->nickname, cli->nickname, this->get_name())
 	}
 	else{
 		if (!this->isAlpha(admin)){
 			return getUserInfo(admin, false) + ERR_CHANOPRIVSNEEDED(admin->nickname, this->get_name());
 		}
+		this->invited.push_back(cli);
+		return getUserInfo(admin, false) + RPL_INVITING(admin->nickname, cli->nickname, this->get_name());
+		//hna khas itsafet hdak li t invita o lclient li invita 
 	}
-	return "";
 }
 
 //2 reply 

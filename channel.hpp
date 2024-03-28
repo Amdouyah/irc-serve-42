@@ -9,7 +9,7 @@
 #define ERR_NOTONCHANNEL(client, chan)  				("442" + client + " " + chan +  " :You're not on that channel\r\n");
 #define ERR_CHANOPRIVSNEEDED(client, chan)				("482" + client + " " + chan +  " :You're not channel operator\r\n");
 #define ERR_USERONCHANNEL(client, nick, chan)			("443" + client + " " + nick + " " + chan +  " :is already on channel\r\n");
-
+#define RPL_INVITING(client, nick, channel) 			("341 " + client + " " + nick + " " + channel + "\r\n")
 
 class channel{
 	public:
