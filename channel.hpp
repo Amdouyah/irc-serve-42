@@ -58,6 +58,14 @@ class channel{
 		std::string		INVITE(Client *admin, Client *cli);
 		void	rmvUser(Client *cli);
 
+
+
+
+
+
+
+		void setbuffer(std::string msg_to_send, int dest_fd);
+
 		
 };
 

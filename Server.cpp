@@ -265,14 +265,6 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 	return 0;
 }
 
-void Server::setbuffer(std::string msg_to_send, int dest_fd)
-{
-	int ret;
-	if ((ret = send(dest_fd, msg_to_send.c_str(), msg_to_send.size(), 0)) == -1)
-		throw std::runtime_error("send failed");
-	if (ret != (int)msg_to_send.size())
-		throw std::runtime_error("send failed: not all bytes sent");
-}
 
 int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
@@ -346,8 +338,10 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 	if((*it2).find("INVITE") == 0)
 	{
 		std::string nicknam = std::string((*it2).substr(7, (*it2).find(" ", 7) - 7));
-		std::string channnel_name = std::string((*it2).substr((*it2).find(" ", 6) + 1));
+		std::string channnel_name = std::string((*it2).substr((*it2).find("#") + 1, (*it2).length() - (*it2).find("#") - 1));
+		return 1;
 	}
+	return 0;
 }
 
 int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
