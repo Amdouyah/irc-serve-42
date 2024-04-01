@@ -56,6 +56,7 @@ class Server
 		int join(deque_itr &it, std::vector<std::string>::iterator &it2);
 		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
 		int kick_server(deque_itr &it, std::vector<std::string>::iterator &it2);
+		int invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2)
 
 		~Server();
 	private:

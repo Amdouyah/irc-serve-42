@@ -341,6 +341,15 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 	return 0;
 }
 
+int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if((*it2).find("INVITE") == 0)
+	{
+		std::string nicknam = std::string((*it2).substr(7, (*it2).find(" ", 7) - 7));
+		std::string channnel_name = std::string((*it2).substr((*it2).find(" ", 6) + 1));
+	}
+}
+
 int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("JOIN") == 0)
@@ -445,6 +454,8 @@ void Server::read_data_from_socket(int i)
 				else if (join(it, it2) == 1)
 					continue;
 				else if(kick_server(it,it2) == 1)
+					continue;
+				else if(invite_to_channel(it,it2) == 1)
 					continue;
 				else
 					std::cout << "command unkown" << std::endl;
