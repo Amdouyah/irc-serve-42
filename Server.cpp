@@ -229,7 +229,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 				}
 			}
 		}
-		else if(dest  == "jhonny")
+		else if (dest == "jhonny")
 		{
 
 			std::string msg_to_send = this->_bot.game(it, msg);
@@ -265,69 +265,43 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 	return 0;
 }
 
-
 int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	int i = 0;
 	int a = 0;
-	if((*it2).find("KICK") == 0)
+	if ((*it2).find("KICK") == 0)
 	{
-		while(1)
+		while (1)
 		{
 			a = (*it2).find(" ", a + 1);
 			i++;
-			if(a == std::string::npos || i >= 2)
+			if (a == std::string::npos || i >= 2)
 				break;
 		}
-		if(i != 2)
+		if (i != 2)
 		{
 			std::cout << "you need more parametre" << std::endl;
 			return 1;
 		}
-		std::string channnel_name = std::string((*it2).substr(6, (*it2).find(" ", 6) - 6));
-        std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
+		std::string channnel_name = std::string((*it2).substr((*it2).find("#", 5) + 1, (*it2).find(" ", 5) - ((*it2).find("#", 5) + 1)));
+		std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
 		deque_chan chanel = this->_channels.begin();
 		bool found = false;
-		std::cout << channnel_name <<channnel_name.length()<<"\n";
-		for(; chanel != this->_channels.end(); chanel++)
+		for (; chanel != this->_channels.end(); chanel++)
 		{
-			std::cout << (*chanel)->get_name() <<(*chanel)->get_name().length() << "\n";
-			if((*chanel)->get_name() == channnel_name.c_str())
+			if ((*chanel)->get_name() == channnel_name.c_str())
 			{
 				found = true;
 				break;
 			}
 		}
-		if(found == false)
+		if (found == false)
 		{
 			std::cout << "channel not found" << std::endl;
 			return 1;
 		}
-		found = false;
-		deque_itr kicker = this->_clients.begin();
-		std::cout << target <<target.length()<<"\n";
-		for(; kicker != this->_clients.end(); kicker++)
-		{
-			std::cout << (*kicker)->nickname <<(*kicker)->nickname.length()<<"\n";
-			if((*kicker)->nickname == target)
-			{
-				found = true;
-				break;
-			}
-		}
-		if(found == false)
-		{
-			std::cout << "user not found" << std::endl;
-			return 1;
-		}	
-		std::string msg_to_send = (*chanel)->KICK(*it, *kicker);
-		for(deque_itr it3 = (*chanel)->alpha_users.begin(); it3 != (*chanel)->alpha_users.end(); it3++)
-		{
-			int status = send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-			if(status == -1)
-				throw std::runtime_error("[Server] Send error to client fd " + std::to_string((*it3)->client_fd) + ": " + std::string(strerror(errno)));
-		}
-		
+		// std::string msg_to_send = (*chanel)->KICK(*it, *kicker);
+		return 1;
 	}
 
 	return 0;
@@ -335,10 +309,34 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 
 int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
-	if((*it2).find("INVITE") == 0)
+	if ((*it2).find("INVITE") == 0)
 	{
 		std::string nicknam = std::string((*it2).substr(7, (*it2).find(" ", 7) - 7));
 		std::string channnel_name = std::string((*it2).substr((*it2).find("#") + 1, (*it2).length() - (*it2).find("#") - 1));
+		bool found = false;
+		deque_chan it3 = _channels.begin();
+		for(; it3 != _channels.end(); it3++)
+		{
+			if ((*it3)->get_name() == channnel_name)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (found == false)
+		{
+			std::cout << "channel not found" << std::endl;
+			return 1;
+		}
+		for (deque_itr it4 = _clients.begin(); it4 != _clients.end(); it3++)
+		{
+			if ((*it4)->nickname == nicknam)
+			{
+				std::cout << "do the invite" << std::endl;
+				// (*it3)->INVITE(*it, *it4);
+				break;
+			}
+		}
 		return 1;
 	}
 	return 0;
@@ -383,6 +381,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 				std::string channel_name = std::string(*it2).substr(6);
 				channel *new_channel = new channel(channel_name);
 				new_channel->alpha_users.push_back(*it);
+				new_channel->beta_users.push_back(*it);
 				std::cout << "channel created"
 						  << "with name " << new_channel->_name << std::endl;
 				_channels.push_back(new_channel);
@@ -407,7 +406,7 @@ void Server::read_data_from_socket(int i)
 	buffer[bytes_read] = '\0';
 	if (bytes_read <= 0)
 	{
-		if(bytes_read == 0)
+		if (bytes_read == 0)
 		{
 			std::cout << "[Server] Client fd " << sender_fd << " disconnected." << std::endl;
 			close(sender_fd); // Close socket
@@ -420,7 +419,7 @@ void Server::read_data_from_socket(int i)
 					break;
 				}
 			}
-			del_from_poll_fds( i);
+			del_from_poll_fds(i);
 		}
 	}
 	else
@@ -447,9 +446,9 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (join(it, it2) == 1)
 					continue;
-				else if(kick_server(it,it2) == 1)
+				else if (kick_server(it, it2) == 1)
 					continue;
-				else if(invite_to_channel(it,it2) == 1)
+				else if (invite_to_channel(it, it2) == 1)
 					continue;
 				else
 					std::cout << "command unkown" << std::endl;
@@ -458,7 +457,7 @@ void Server::read_data_from_socket(int i)
 	}
 }
 //****************************************************************
-void Server::add_to_poll_fds( int new_fd)
+void Server::add_to_poll_fds(int new_fd)
 {
 	struct pollfd new_poll_fds;
 	new_poll_fds.fd = new_fd;
