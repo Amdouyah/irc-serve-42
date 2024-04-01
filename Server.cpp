@@ -128,7 +128,7 @@ void Server::accept_new_connection(int server_socket)
 	new_client->state = 0;
 	_clients.push_back(new_client);
 }
-//****************************************************************
+
 
 void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::vector<std::string>::iterator &it2)
 {
@@ -456,7 +456,6 @@ void Server::read_data_from_socket(int i)
 		}
 	}
 }
-//****************************************************************
 void Server::add_to_poll_fds(int new_fd)
 {
 	struct pollfd new_poll_fds;

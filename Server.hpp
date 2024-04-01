@@ -40,7 +40,6 @@ class Server
 {
 
 	public:
-
 		Server(int port, std::string password);
 		void start();
 		int create_server_socket(void);
@@ -50,13 +49,10 @@ class Server
 		void del_from_poll_fds(int i);
 		void regitration(std::vector<std::string>& lines, deque_itr& it , std::vector<std::string>::iterator& it2);
 		static void signal_handler(int sig);
-
-
 		int join(deque_itr &it, std::vector<std::string>::iterator &it2);
 		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
 		int kick_server(deque_itr &it, std::vector<std::string>::iterator &it2);
 		int invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2);
-
 		~Server();
 	private:
 	int 			_error;
@@ -65,9 +61,7 @@ class Server
 	std::deque<Client *>	_clients;
 	_server_		_server;
 	std::deque<channel *> _channels;
-
-
-
 };
+
 
 #endif /* ********************************************************** SERVER_H */
