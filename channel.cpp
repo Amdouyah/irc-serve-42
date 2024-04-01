@@ -113,7 +113,7 @@ std::string		channel::INVITE(Client *admin, Client *cli){
 
 
 
-void Server::setbuffer(std::string msg_to_send, int dest_fd)
+void channel::setbuffer(std::string msg_to_send, int dest_fd)
 {
 	int ret;
 	if ((ret = send(dest_fd, msg_to_send.c_str(), msg_to_send.size(), 0)) == -1)
