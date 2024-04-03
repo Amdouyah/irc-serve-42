@@ -54,18 +54,14 @@ class channel{
 		bool		isAlpha(Client *cli);
 		bool		isInvit(Client *cli);
 
-		std::string 	KICK(Client *admin, Client *cli);
-		std::string		INVITE(Client *admin, Client *cli);
+		void		KICK(Client *admin, Client *cli);
+		void		INVITE(Client *admin, Client *cli);
+		void 		MODE(Client *admin, std::string mode, std::string mode_sign);
+		
 		void	rmvUser(Client *cli);
-
-
-
-
-
-
-
-		void setbuffer(std::string msg_to_send, int dest_fd);
-
+		void 	ModeInviteOnly(std::string mode_sign);
+		void	setbuffer(std::string msg_to_send, int dest_fd);
+		void 	SendToAllClient(std::string buffer);
 		
 };
 
