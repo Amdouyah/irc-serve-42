@@ -4,12 +4,18 @@
 #include <iostream>
 #include <deque>
 #include "Client.hpp"
+#include <sstream>
 
-#define ERR_USERNOTINCHANNEL(client, nick, chan) 		("441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n");
-#define ERR_NOTONCHANNEL(client, chan)  				("442" + client + " " + chan +  " :You're not on that channel\r\n");
-#define ERR_CHANOPRIVSNEEDED(client, chan)				("482" + client + " " + chan +  " :You're not channel operator\r\n");
-#define ERR_USERONCHANNEL(client, nick, chan)			("443" + client + " " + nick + " " + chan +  " :is already on channel\r\n");
-#define RPL_INVITING(client, nick, channel) 			("341 " + client + " " + nick + " " + channel + "\r\n")
+
+#define ERR_NEEDMOREPARAMS(client, command)				("461 " + client + " " + command + " :Not enough parameters\r\n")
+#define ERR_USERNOTINCHANNEL(client, nick, chan) 		("441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n")
+#define ERR_NOTONCHANNEL(client, chan)  				("442" + client + " " + chan +  " :You're not on that channel\r\n")
+#define ERR_CHANOPRIVSNEEDED(client, chan)				("482" + client + " " + chan +  " :You're not channel operator\r\n")
+#define ERR_USERONCHANNEL(client, nick, chan)			("443" + client + " " + nick + " " + chan +  " :is already on channel\r\n")
+#define RPL_INVITING(client, nick, chan) 				("341 " + client + " " + nick + " " + chan + "\r\n")
+#define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
+#define ERR_UNKNOWNMODE(nick, mode)						(" 472 " + nick + " " + mode + " :is unknown mode char to me\r\n")
+
 
 class channel{
 	public:
@@ -45,23 +51,40 @@ class channel{
 		void set_pass(std::string pass);
 		void set_topic(std::string topic);
 		void set_MaxUser(int max);
+		void set_Alpha(Client *cli);
+		void RmvAlpha(Client *cli);
 
+		Client 		*getUser(std::string name);
 		std::string get_name();
 		std::string get_pass();
 		std::string get_topic();
+
 		int 		get_maxUsers();
 		bool 		onChannel(Client *cli);
 		bool		isAlpha(Client *cli);
 		bool		isInvit(Client *cli);
 
+		static std::string getUserInfo(Client *cli, bool bil);
+
 		void		KICK(Client *admin, Client *cli);
 		void		INVITE(Client *admin, Client *cli);
-		void 		MODE(Client *admin, std::string mode, std::string mode_sign);
+		void 		MODE(Client *admin, std::string mode, std::string param);
+		void 		PART(Client *cli, std::string reason);
+		void 		SetModes(Client *admin, char c, std::string param);
+		void 		RemModes(Client *admin, char c, std::string param);
+		void		valid_Modes(Client *cli, std::string mode, std::string param);
+
+		void 		addAdmin(Client *cli, std::string param);
+		void 		RemAdmin(Client *cli, std::string param);
+		void 		changInviteMode(Client *cli, int i);
+		void 		changMaxUser(Client *cli, int i, std::string &param);
+		void		changKey(Client *cli, int i, std::string &param);
+		void		changeTopic(Client *cli, int i);
 		
-		void	rmvUser(Client *cli);
-		void 	ModeInviteOnly(std::string mode_sign);
-		void	setbuffer(std::string msg_to_send, int dest_fd);
-		void 	SendToAllClient(std::string buffer);
+		void		rmvUser(Client *cli);
+		static void	setbuffer(std::string msg_to_send, int dest_fd);
+		void 		SendToAllClient(std::string buffer);
+
 		
 };
 

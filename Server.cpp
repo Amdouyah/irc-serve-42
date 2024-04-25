@@ -469,3 +469,28 @@ void Server::del_from_poll_fds(int i)
 	this->_server.poll_fds.erase(this->_server.poll_fds.begin() + i);
 	this->_server.poll_count--;
 }
+
+channel* Server::get_chan(std::string name){
+	for (size_t i = 0; i < _channels.size(); ++i) {
+		if (_channels[i]->get_name() == name)
+			return _channels[i];
+	}
+	return NULL;
+}
+
+
+void Server::MODE(deque_itr &it, std::string line){
+	std::istringstream input(line);
+
+	std::string channel_n, mode, param;
+	input >> channel_n >> mode >> param; 
+	channel* chan = get_chan(channel_n);
+	if(chan){
+		chan->MODE(*it, mode, param);
+	}
+	else {
+		//print not such channel
+	}
+	//check if channel valid 
+
+}

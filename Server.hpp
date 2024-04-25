@@ -53,6 +53,8 @@ class Server
 		int privmsg(std::vector<std::string>::iterator& it2, deque_itr& it);
 		int kick_server(deque_itr &it, std::vector<std::string>::iterator &it2);
 		int invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2);
+		void MODE(deque_itr &it, std::string line);
+		channel *get_chan(std::string name);
 		~Server();
 	private:
 	int 			_error;
