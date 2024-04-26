@@ -138,7 +138,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 				(*it)->password = true;
 			else
 			{
-				std::string msg_to_send =  ERR_PASSWDMISMATCH();
+				std::string msg_to_send = ERR_PASSWDMISMATCH();
 				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 		}
@@ -179,7 +179,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					}
 					if (i != 3 || (*it3).find(":") == std::string::npos)
 					{
-						std::string msg_to_send =  ERR_NEEDMOREPARAMS1();
+						std::string msg_to_send = ERR_NEEDMOREPARAMS1();
 						send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
 					else
@@ -197,8 +197,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						(*it)->realname = final[3];
 					}
 				}
-				else
-				if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
+				else if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
 				{
 					std::string msg_to_send = RPL_WELCOME();
 					send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
@@ -208,7 +207,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 		}
 		else
 		{
-			std::string msg_to_send =  ERR_PASSWDMISMATCH();
+			std::string msg_to_send = ERR_PASSWDMISMATCH();
 			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		}
 	}
@@ -492,13 +491,57 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (invite_to_channel(it, it2) == 1)
 					continue;
+				else if (part(it, it2) == 1)
+					continue;
+				else if (mode_m(it, it2) == 1)
+					continue;
 				else
-					std::cout << "command unkown" << std::endl;
+				{
+					std::string msg_send = channel::getUserInfo(*it, 0) +ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
+					send((*it)->client_fd, msg_send.c_str(), msg_send.length(), 0);
+				}
 			}
 		}
 	}
 }
-void Server::nickname(deque_itr &it, std::string line)
+
+int Server::mode_m(deque_itr &it ,std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("MODE") == 0)
+	{
+		std::string evrything = std::string((*it2).substr(6));
+		MODE(it, evrything);
+		return 1;
+	}
+	return 0;
+
+}
+
+int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("PART") == 0)
+	{
+		std::string channel_name = std::string((*it2).substr(6, (*it2).find(" ", 6) - 6));
+		std::string reason = std::string((*it2).substr((*it2).find(":", 6) + 1));
+		deque_chan chan = _channels.begin();
+		for (; chan != _channels.end(); chan++)
+		{
+			if ((*chan)->get_name() == channel_name)
+			{
+				(*chan)->PART(*it, reason);
+				break;
+			}
+		}
+		if (chan == _channels.end())
+		{
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
+			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+		}
+		return 1;
+	}
+	return 0;
+}
+int Server::nickname(deque_itr &it, std::string line)
 {
 	if (line.find("NICK") == 0)
 	{
