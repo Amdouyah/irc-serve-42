@@ -319,7 +319,7 @@ void channel::changMaxUser(Client *cli, int i, std::string &param){
         	setbuffer(rpl_msg, cli->client_fd);
 			return ;
 		}
-		max == convertToInt(param);
+		max = convertToInt(param);
 		if(max <= 0){
 			rpl_msg = getUserInfo(cli, false) + ERR_NEEDMOREPARAMS(cli->nickname, "MODE" + " +l ");
         	setbuffer(rpl_msg, cli->client_fd);

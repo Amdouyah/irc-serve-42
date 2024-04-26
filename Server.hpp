@@ -55,6 +55,7 @@ class Server
 		int invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2);
 		void MODE(deque_itr &it, std::string line);
 		channel *get_chan(std::string name);
+		void nickname(deque_itr &it, std::string line);
 		~Server();
 	private:
 	int 			_error;

@@ -7,15 +7,21 @@
 #include <sstream>
 
 
-#define ERR_NEEDMOREPARAMS(client, command)				("461 " + client + " " + command + " :Not enough parameters\r\n")
-#define ERR_USERNOTINCHANNEL(client, nick, chan) 		("441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n")
-#define ERR_NOTONCHANNEL(client, chan)  				("442" + client + " " + chan +  " :You're not on that channel\r\n")
-#define ERR_CHANOPRIVSNEEDED(client, chan)				("482" + client + " " + chan +  " :You're not channel operator\r\n")
-#define ERR_USERONCHANNEL(client, nick, chan)			("443" + client + " " + nick + " " + chan +  " :is already on channel\r\n")
-#define RPL_INVITING(client, nick, chan) 				("341 " + client + " " + nick + " " + chan + "\r\n")
+#define ERR_NEEDMOREPARAMS(client, command)				(" 461 " + client + " " + command + " :Not enough parameters\r\n")
+#define ERR_USERNOTINCHANNEL(client, nick, chan) 		(" 441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n")
+#define ERR_NOTONCHANNEL(client, chan)  				(" 442" + client + " " + chan +  " :You're not on that channel\r\n")
+#define ERR_CHANOPRIVSNEEDED(client, chan)				(" 482" + client + " " + chan +  " :You're not channel operator\r\n")
+#define ERR_USERONCHANNEL(client, nick, chan)			(" 443" + client + " " + nick + " " + chan +  " :is already on channel\r\n")
+#define RPL_INVITING(client, nick, chan) 				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
 #define ERR_UNKNOWNMODE(nick, mode)						(" 472 " + nick + " " + mode + " :is unknown mode char to me\r\n")
-
+#define ERR_NOSUCHNICK(client,nick)						(" 401 "  + client + " " + nick + ":No such nick/channel\r\n")
+#define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
+#define ERR_PASSWDMISMATCH()								(" 464 :Password incorrect\r\n")
+#define ERR_NEEDMOREPARAMS1()							(" 461 :Not enough parameters\r\n")
+#define RPL_WELCOME()									(" 001 :Welcome to the Internet Relay Network \r\n")
+#define ERR_NOSUCHCHANNEL(client, channel) 				(" 403 " + client + " " + channel + " :No such channel\r\n")	
+#define RPL_INVITING(client, nick, chan)				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 
 class channel{
 	public:
@@ -65,11 +71,12 @@ class channel{
 		bool		isInvit(Client *cli);
 
 		static std::string getUserInfo(Client *cli, bool bil);
-
+		//admin howa li ghay kicky
 		void		KICK(Client *admin, Client *cli);
 		void		INVITE(Client *admin, Client *cli);
 		void 		MODE(Client *admin, std::string mode, std::string param);
 		void 		PART(Client *cli, std::string reason);
+		
 		void 		SetModes(Client *admin, char c, std::string param);
 		void 		RemModes(Client *admin, char c, std::string param);
 		void		valid_Modes(Client *cli, std::string mode, std::string param);
