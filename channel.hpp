@@ -20,7 +20,6 @@
 #define ERR_PASSWDMISMATCH()								(" 464 :Password incorrect\r\n")
 #define ERR_NEEDMOREPARAMS1()							(" 461 :Not enough parameters\r\n")
 #define RPL_WELCOME()									(" 001 :Welcome to the Internet Relay Network \r\n")
-#define ERR_NOSUCHCHANNEL(client, channel) 				(" 403 " + client + " " + channel + " :No such channel\r\n")	
 #define RPL_INVITING(client, nick, chan)				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_UNKNOWNCOMMAND(client, command)				(" 421 " + client + " " + command + " :Unknown command\r\n")
 

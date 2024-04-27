@@ -110,15 +110,9 @@ void Server::accept_new_connection(int server_socket)
 	int status;
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
-	client_fd = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len); // Accept new connection
-
-	if (client_fd == -1)
-		throw std::runtime_error("[Server] Accept error: " + std::string(strerror(errno)));
+	client_fd = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len);
 	fcntl(client_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
 	add_to_poll_fds(client_fd);
-	// Send welcome message to client
-	std::string msg_to_send = "Welcome to irc server \n";
-	send(client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 	Client *new_client = new Client();
 	new_client->client_fd = client_fd;
 	new_client->client_addr = client_addr;												 // Save client address
@@ -131,11 +125,15 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 {
 	for (; it2 != lines.end(); it2++)
 	{
+		if ((*it2).find("CAP") == 0)
+			continue;
 		if ((*it2).find("PASS") == 0)
 		{
 			std::string testing = std::string(*it2).substr(5, this->_server.password.length());
 			if (testing == this->_server.password)
+			{
 				(*it)->password = true;
+			}
 			else
 			{
 				std::string msg_to_send = ERR_PASSWDMISMATCH();
@@ -197,7 +195,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 						(*it)->realname = final[3];
 					}
 				}
-				else if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
+				if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
 				{
 					std::string msg_to_send = RPL_WELCOME();
 					send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
@@ -497,7 +495,7 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else
 				{
-					std::string msg_send = channel::getUserInfo(*it, 0) +ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
+					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
 					send((*it)->client_fd, msg_send.c_str(), msg_send.length(), 0);
 				}
 			}
@@ -505,7 +503,7 @@ void Server::read_data_from_socket(int i)
 	}
 }
 
-int Server::mode_m(deque_itr &it ,std::vector<std::string>::iterator &it2)
+int Server::mode_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("MODE") == 0)
 	{
@@ -514,7 +512,6 @@ int Server::mode_m(deque_itr &it ,std::vector<std::string>::iterator &it2)
 		return 1;
 	}
 	return 0;
-
 }
 
 int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
@@ -553,11 +550,13 @@ int Server::nickname(deque_itr &it, std::string line)
 			{
 				std::string msg_to_send = channel::getUserInfo(*it, 0) + " " + (*it)->nickname + " " + nick + ":Nickname is already in use\r\n";
 				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-				return;
+				return 1;
 			}
 		}
 		(*it)->nickname = nick;
+		return 1;
 	}
+	return 0;
 }
 void Server::add_to_poll_fds(int new_fd)
 {
