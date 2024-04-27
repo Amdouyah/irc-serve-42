@@ -49,6 +49,19 @@ int 		channel::get_maxUsers(){
 	return this->maxUsers;
 }
 
+bool channel::Invit_Only(){
+	return invitOnly;
+}
+bool channel::HasTopic(){
+	return has_topic;
+}
+bool channel::HasPass(){
+	return has_pass;
+}
+bool channel::HasLimit(){
+	return limitsuser;
+}
+
 std::string channel::getUserInfo(Client *cli, bool bil){
 	return (bil ? ":" + cli->nickname + "!" + cli->username + "@" + cli->servername + " " : ":" + cli->servername + " ");
 }
@@ -63,7 +76,7 @@ bool	channel::isInvit(Client *cli){
 	return (std::find(this->invited.begin(), this->invited.end(), cli) != this->invited.end());
 }
 
-void	channel::KICK(Client *admin, Client *cli){
+void	channel::KICK(Client *admin, Client *cli, std::string reason){
 	std::string err_msg;
 	if (!this->onChannel(admin)){
 		err_msg = getUserInfo(admin, false) + ERR_NOTONCHANNEL(admin->nickname, this->get_name());
@@ -81,7 +94,7 @@ void	channel::KICK(Client *admin, Client *cli){
 		return ;
 	}
 	rmvUser(cli);
-	SendToAllClient(getUserInfo(cli, true) + "KICK" + this->get_name() + " " + cli->nickname + " :" + cli->nickname);
+	SendToAllClient(getUserInfo(cli, true) + " KICK " + this->get_name() + " " + cli->nickname + " : " + (reason.empty() ? "bad content" : reason) + "\r\n");
 }
 
 void channel::SendToAllClient(std::string buffer){

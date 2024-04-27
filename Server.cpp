@@ -364,7 +364,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 					if ((*chan)->get_name() == std::string(*it2).substr(6))
 					{
 						found = true;
-						if ((*chan)->invitOnly == true)
+						if ((*chan)->Invit_Only() == true)
 						{
 							deque_itr it3 = (*chan)->invited.begin();
 							for (; it3 != (*chan)->invited.end(); it3++)
@@ -384,10 +384,10 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
-						else if ((*chan)->has_pass == true)
+						else if ((*chan)->HasPass() == true)
 						{
 							std::string pass = std::string(*it2).substr(6);
-							if (pass == (*chan)->passwd)
+							if (pass == (*chan)->get_pass())
 							{
 								(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
 								std::string msg_to_send = ":" + (*it)->nickname + " JOIN " + (*chan)->get_name() + "\r\n";
@@ -400,7 +400,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
-						else if ((*chan)->invitOnly == false || (*chan)->has_pass == false)
+						else if ((*chan)->Invit_Only() == false || (*chan)->HasPass() == false)
 						{
 							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
 							std::string msg_to_send = ":" + (*it)->nickname + " JOIN " + (*chan)->get_name() + "\r\n";

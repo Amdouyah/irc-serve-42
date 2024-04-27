@@ -17,14 +17,14 @@
 #define ERR_UNKNOWNMODE(nick, mode)						(" 472 " + nick + " " + mode + " :is unknown mode char to me\r\n")
 #define ERR_NOSUCHNICK(client,nick)						(" 401 "  + client + " " + nick + ":No such nick/channel\r\n")
 #define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
-#define ERR_PASSWDMISMATCH()								(" 464 :Password incorrect\r\n")
+#define ERR_PASSWDMISMATCH()							(" 464 :Password incorrect\r\n")
 #define ERR_NEEDMOREPARAMS1()							(" 461 :Not enough parameters\r\n")
 #define RPL_WELCOME()									(" 001 :Welcome to the Internet Relay Network \r\n")
 #define RPL_INVITING(client, nick, chan)				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_UNKNOWNCOMMAND(client, command)				(" 421 " + client + " " + command + " :Unknown command\r\n")
 
 class channel{
-	public:
+	private:
 		std::string _name;
 		bool		invitOnly;
 
@@ -40,7 +40,7 @@ class channel{
 		int			maxUsers;
 
 
-
+	public:
 		channel();
 
 
@@ -60,6 +60,11 @@ class channel{
 		void set_Alpha(Client *cli);
 		void RmvAlpha(Client *cli);
 
+		bool Invit_Only();
+		bool HasTopic();
+		bool HasPass();
+		bool HasLimit();
+
 		Client 		*getUser(std::string name);
 		std::string get_name();
 		std::string get_pass();
@@ -71,12 +76,14 @@ class channel{
 		bool		isInvit(Client *cli);
 
 		static std::string getUserInfo(Client *cli, bool bil);
+		
 		//admin howa li ghay kicky
-		void		KICK(Client *admin, Client *cli);
+
+		void		KICK(Client *admin, Client *cli, std::string reason);
 		void		INVITE(Client *admin, Client *cli);
 		void 		MODE(Client *admin, std::string mode, std::string param);
 		void 		PART(Client *cli, std::string reason);
-		
+
 		void 		SetModes(Client *admin, char c, std::string param);
 		void 		RemModes(Client *admin, char c, std::string param);
 		void		valid_Modes(Client *cli, std::string mode, std::string param);
