@@ -361,7 +361,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			{
 				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 				{
-					if ((*chan)->get_name() == std::string(*it2).substr(6))
+					if ((*chan)->get_name() == std::string(*it2).substr(5))
 					{
 						found = true;
 						if ((*chan)->Invit_Only() == true)
@@ -372,7 +372,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 								if ((*it3)->nickname == (*it)->nickname)
 								{
 									(*chan)->beta_users.push_back(*it);
-									std::string msg_to_send = ":" + (*it)->nickname + "JOIN " + (*chan)->get_name() + "\r\n";
+									std::string msg_to_send = channel::getUserInfo((*it), 1) + "JOIN " + (*chan)->get_name() + "\r\n";
 									for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
 										send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 									break;
@@ -380,7 +380,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 							}
 							if (it3 == (*chan)->invited.end())
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
+								std::string msg_to_send = channel::getUserInfo((*it), 1) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
 								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
@@ -390,20 +390,20 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 							if (pass == (*chan)->get_pass())
 							{
 								(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
-								std::string msg_to_send = ":" + (*it)->nickname + " JOIN " + (*chan)->get_name() + "\r\n";
+								std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
 								for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
 									send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 							else
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+k)\r\n";
+								std::string msg_to_send = channel::getUserInfo((*it), 1) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+k)\r\n";
 								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
 						else if ((*chan)->Invit_Only() == false || (*chan)->HasPass() == false)
 						{
 							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
-							std::string msg_to_send = ":" + (*it)->nickname + " JOIN " + (*chan)->get_name() + "\r\n";
+							std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
 							for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
 								send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 						}
@@ -414,18 +414,18 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			}
 			if (found == false)
 			{
-				std::string channel_name = std::string(*it2).substr(6);
+				std::string channel_name = std::string(*it2).substr(5);
 				channel *new_channel = new channel(channel_name);
 				new_channel->alpha_users.push_back(*it);
 				new_channel->beta_users.push_back(*it);
-				std::string msg_to_send = channel::getUserInfo((*it), 0) + " JOIN #" + new_channel->get_name() + "\r\n";
+				std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
 				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 				_channels.push_back(new_channel);
 			}
 		}
 		else
 		{
-			std::string msg_to_send = channel::getUserInfo((*it), 0) + ERR_NOSUCHCHANNEL((*it)->nickname, std::string(*it2).substr(6)) + "\r\n";
+			std::string msg_to_send = channel::getUserInfo((*it), 1) + ERR_NOSUCHCHANNEL((*it)->nickname, std::string(*it2).substr(6)) + "\r\n";
 			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		}
 		return 1;
