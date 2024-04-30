@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include <sstream>
 
 void Server::signal_handler(int sig)
 {
@@ -271,49 +272,53 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 
 int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
-	int i = 0;
-	int a = 0;
+	std::string line = *it2; // Assuming *it2 is the line you want to parse
+	std::stringstream ss(line);
+	std::string word;
+	std::vector<std::string> words;
+	while (ss >> word)
+	{
+		words.push_back(word);
+	}
 	if ((*it2).find("KICK") == 0)
 	{
-		while (1)
-		{
-			a = (*it2).find(" ", a + 1);
-			i++;
-			if (a == std::string::npos || i >= 2)
-				break;
-		}
-		if (i != 2)
-		{
-			std::string msg_to_send = ERR_NEEDMOREPARAMS((*it)->nickname, "KICK");
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-			return 1;
-		}
-		std::string channnel_name = std::string((*it2).substr((*it2).find("#", 5) + 1, (*it2).find(" ", 5) - ((*it2).find("#", 5) + 1)));
-		std::string target = std::string((*it2).substr((*it2).find(" ", 5) + 1));
+		std::string channel_name = words[1];
+		std::string target = words[2];
+		std::string reason;
+		for (int i = 3; i < words.size(); i++)
+			reason += words[i] + " ";
 		deque_chan chanel = this->_channels.begin();
 		bool found = false;
 		for (; chanel != this->_channels.end(); chanel++)
 		{
-			if ((*chanel)->get_name() == channnel_name.c_str())
+			if ((*chanel)->get_name() == channel_name)
 			{
 				found = true;
+				for (deque_itr trgt = this->_clients.begin(); trgt != this->_clients.end(); trgt++)
+				{
+					if ((*trgt)->nickname == target)
+					{
+						(*chanel)->KICK(*it, *trgt, reason);
+						break;
+					}
+				}
 				break;
 			}
 		}
 		if (found == false)
 		{
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channnel_name);
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
 			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
 		return 1;
 	}
-
 	return 0;
 }
 
 int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
+
 	if ((*it2).find("INVITE") == 0)
 	{
 		std::string nicknam = std::string((*it2).substr(7, (*it2).find(" ", 7) - 7));
@@ -353,15 +358,22 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("JOIN") == 0)
 	{
-		if ((*it2).find("#") == 5)
+		std::string line = *it2;
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		std::string channel_name = words[1];
+		std::string password = words[2];
+		if (channel_name.find("#") == 0)
 		{
-
 			bool found = false;
 			if (_channels.size() > 0)
 			{
 				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 				{
-					if ((*chan)->get_name() == std::string(*it2).substr(5))
+					if ((*chan)->get_name() == channel_name)
 					{
 						found = true;
 						if ((*chan)->Invit_Only() == true)
@@ -386,8 +398,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 						}
 						else if ((*chan)->HasPass() == true)
 						{
-							std::string pass = std::string(*it2).substr(6);
-							if (pass == (*chan)->get_pass())
+							if (password == (*chan)->get_pass())
 							{
 								(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
 								std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
@@ -414,7 +425,6 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			}
 			if (found == false)
 			{
-				std::string channel_name = std::string(*it2).substr(5);
 				channel *new_channel = new channel(channel_name);
 				new_channel->alpha_users.push_back(*it);
 				new_channel->beta_users.push_back(*it);
@@ -507,7 +517,8 @@ int Server::mode_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("MODE") == 0)
 	{
-		std::string evrything = std::string((*it2).substr(6));
+		std::string evrything = std::string((*it2).substr(5));
+		std::cout << evrything << std::endl;
 		MODE(it, evrything);
 		return 1;
 	}
@@ -518,13 +529,20 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("PART") == 0)
 	{
-		std::string channel_name = std::string((*it2).substr(6, (*it2).find(" ", 6) - 6));
-		std::string reason = std::string((*it2).substr((*it2).find(":", 6) + 1));
+		std::string line = *it2;
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		std::string channel_name = words[1];
+		std::string reason = words[2];
 		deque_chan chan = _channels.begin();
 		for (; chan != _channels.end(); chan++)
 		{
 			if ((*chan)->get_name() == channel_name)
 			{
+				std::cout << "found channel" << std::endl;
 				(*chan)->PART(*it, reason);
 				break;
 			}

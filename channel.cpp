@@ -238,6 +238,7 @@ void 		channel::PART(Client *cli, std::string reason){
         setbuffer(err_msg, cli->client_fd);
     }
     else{
+		std::cout << "on chanel \n";
 		this->rmvUser(cli);
         SendToAllClient(cli->nickname + " has leave " + this->_name + " because " + reason + "\r\n");
     }
