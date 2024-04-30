@@ -355,6 +355,23 @@ void channel::changMaxUser(Client *cli, int i, std::string &param){
 	}
 }
 
+void channel::who(Client *cli, Client *user){
+	std::string rpl_msg;
+
+	rpl_msg +=  ": " + cli->servername + " 352 " + cli->nickname + " " + this->get_name() + " " + user->username + " " + user->username + " " + user->client_ip + " " + user->nickname + " H";
+	if(isAlpha(user))
+		rpl_msg += "@";
+	rpl_msg += ":0 realname\r\n";
+	setbuffer(rpl_msg, cli->client_fd);
+	
+}
+void channel::rpl_who(Client *cli, Client *user){
+	for(size_t i = 0; i < beta_users.size(); ++i){
+		who(cli, beta_users[i]);
+	}
+	setbuffer(getUserInfo(cli, false) + RPL_ENDOFWHOIS(cli->nickname, this->get_name()), cli->client_fd);
+}
+
 
 void channel::changKey(Client *cli, int i, std::string &param){
     std::string rpl_msg;

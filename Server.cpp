@@ -590,12 +590,7 @@ void Server::MODE(deque_itr &it, std::string line)
 	input >> channel_n >> mode >> param;
 	channel *chan = get_chan(channel_n);
 	if (chan)
-	{
 		chan->MODE(*it, mode, param);
-	}
 	else
-	{
-		// print not such channel
-	}
-	// check if channel valid
+		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
 }

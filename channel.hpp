@@ -22,6 +22,7 @@
 #define RPL_WELCOME()									("001 :Welcome to the Internet Relay Network \r\n")
 #define RPL_INVITING(client, nick, chan)				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_UNKNOWNCOMMAND(client, command)				(" 421 " + client + " " + command + " :Unknown command\r\n")
+#define RPL_ENDOFWHOIS(cli, chan)						(" 315 " + cli + " " + chan + " :End of /WHOIS list\r\n")
 
 class channel{
 	private:
@@ -83,6 +84,10 @@ class channel{
 		void		INVITE(Client *admin, Client *cli);
 		void 		MODE(Client *admin, std::string mode, std::string param);
 		void 		PART(Client *cli, std::string reason);
+
+		void 		who(Client *cli, Client *user);
+		void 		rpl_who(Client *cli, Client *user);
+
 
 		void 		SetModes(Client *admin, char c, std::string param);
 		void 		RemModes(Client *admin, char c, std::string param);
