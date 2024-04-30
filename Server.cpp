@@ -130,8 +130,12 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 			continue;
 		if ((*it2).find("PASS") == 0)
 		{
-			std::string testing = std::string(*it2).substr(5, this->_server.password.length());
-			if (testing == this->_server.password)
+			std::stringstream ss(*it2);
+
+			std::string pass ;
+			ss >> pass >> pass;
+			std::cout << "pass: " << pass << std::endl;
+			if (pass == this->_server.password)
 			{
 				(*it)->password = true;
 			}
@@ -147,7 +151,10 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 			{
 				if ((*it2).find("NICK") == 0)
 				{
-					std::string nick = std::string(*it2).substr(5);
+					std::stringstream ss(*it2);
+					std::string nick;
+					ss >> nick >> nick;
+					std::cout << "nick: " << nick << std::endl;
 					deque_itr clientPre = _clients.begin();
 					for (; clientPre != _clients.end(); clientPre++)
 					{
@@ -162,38 +169,26 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 				}
 				else if ((*it2).find("USER") == 0)
 				{
-					int i = 0;
-					std::stringstream sss((*it2).substr(5));
+					std::stringstream ss(*it2);
 					std::string parm;
-					std::vector<std::string> parms;
-					std::vector<std::string> final;
-					while (std::getline(sss, parm, ' '))
-						parms.push_back(parm);
-					std::vector<std::string>::iterator it3 = parms.begin();
-					while ((*it3).find(":") != 0 && it3 != parms.end())
-					{
-						i++;
-						final.push_back(*it3);
-						it3++;
-					}
-					if (i != 3 || (*it3).find(":") == std::string::npos)
+					std::string parm1;
+					std::string parm2;
+					std::string parm3;	
+					std::string realname;
+					ss >> parm >> parm >> parm1 >> parm2 ;
+					while(ss>>parm3)
+						realname += parm3+ " ";
+					if (realname.find(":") != 0)
 					{
 						std::string msg_to_send = ERR_NEEDMOREPARAMS1();
 						send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
 					else
 					{
-						std::string realname;
-						while (it3 != parms.end())
-						{
-							realname += *it3;
-							it3++;
-						}
-						final.push_back(realname);
-						(*it)->username = final[0];
-						(*it)->hostname = final[1];
-						(*it)->servername = final[2];
-						(*it)->realname = final[3];
+						(*it)->username = parm;
+						(*it)->hostname = parm1;
+						(*it)->servername = parm2;
+						(*it)->realname = realname.substr(1);
 					}
 				}
 				if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
@@ -214,12 +209,19 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 
 int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 {
-	int dest_fd;
-	int status;
 	if ((*it2).find("PRIVMSG") == 0)
 	{
-		std::string dest = std::string(*it2).substr(8, std::string(*it2).find(" ", 8) - 8);
-		std::string msg = std::string(*it2).substr(std::string(*it2).find(":", 8) + 1);
+		int dest_fd;
+		std::string line = *it2;
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		std::string dest = words[1];
+		std::string msg;
+		for(int i = 2; i < words.size(); i++)
+			msg += " " + words[i];
 		if (dest.find("#") == 0)
 		{
 			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
@@ -237,32 +239,31 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		}
 		else if (dest == "jhonny")
 		{
-			std::string msg_to_send = ":jhonny PRIVMSG " + (*it)->nickname + " : " + this->_bot.game(it, msg) + "\r\n";
+			std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it)->nickname + " : " + this->_bot.game(it, msg) + "\r\n";
 			send((*it)->client_fd, (msg_to_send.c_str()), msg_to_send.length(), 0);
 		}
 		else
 		{
 			deque_itr it3 = _clients.begin();
-			for (; it3 != _clients.end();)
+			for (; it3 != _clients.end(); it3++)
 			{
 				if ((*it3)->nickname == dest)
-				{
+				{	
 					dest_fd = (*it3)->client_fd;
 					break;
 				}
-				it3++;
-				if (it3 == _clients.end())
-					dest_fd = 0;
 			}
+			if (it3 == _clients.end())
+				dest_fd = 0;
 			if (dest_fd == 0)
 			{
-				std::string msg_to_send = channel::getUserInfo(*it, 0) + ERR_NOSUCHNICK((*it)->nickname, dest);
+				std::string msg_to_send = channel::getUserInfo(*it, 1) + ERR_NOSUCHNICK((*it)->nickname, dest);
 				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 			else
 			{
-				std::string msg_to_send = ":" + (*it)->nickname + "PRIVMSG " + (*it3)->nickname + " : " + msg + "\r\n";
-				status = send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it3)->nickname  + msg + "\r\n";
+				send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 		}
 		return 1;
