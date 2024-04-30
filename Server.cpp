@@ -272,16 +272,15 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 
 int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
-	std::string line = *it2; // Assuming *it2 is the line you want to parse
-	std::stringstream ss(line);
-	std::string word;
-	std::vector<std::string> words;
-	while (ss >> word)
-	{
-		words.push_back(word);
-	}
 	if ((*it2).find("KICK") == 0)
 	{
+		std::string line = *it2; 
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		
 		std::string channel_name = words[1];
 		std::string target = words[2];
 		std::string reason;
@@ -503,6 +502,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (mode_m(it, it2) == 1)
 					continue;
+				else if (WHO(it, it2) == 1)
+					continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
@@ -513,12 +514,36 @@ void Server::read_data_from_socket(int i)
 	}
 }
 
+int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("WHO") == 0)
+	{
+		std::string line = *it2; 
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		std::string channel_name = words[1];
+		deque_chan chan = _channels.begin();
+		for (; chan != _channels.end(); chan++)
+		{
+			if ((*chan)->get_name() == channel_name)
+			{
+				(*chan)->rpl_who(*it);
+				break;
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
 int Server::mode_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("MODE") == 0)
 	{
 		std::string evrything = std::string((*it2).substr(5));
-		std::cout << evrything << std::endl;
 		MODE(it, evrything);
 		return 1;
 	}
@@ -542,7 +567,6 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 		{
 			if ((*chan)->get_name() == channel_name)
 			{
-				std::cout << "found channel" << std::endl;
 				(*chan)->PART(*it, reason);
 				break;
 			}
@@ -608,12 +632,7 @@ void Server::MODE(deque_itr &it, std::string line)
 	input >> channel_n >> mode >> param;
 	channel *chan = get_chan(channel_n);
 	if (chan)
-	{
 		chan->MODE(*it, mode, param);
-	}
 	else
-	{
-		// print not such channel
-	}
-	// check if channel valid
+		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
 }
