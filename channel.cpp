@@ -111,14 +111,14 @@ void channel::KICK(Client *admin, Client *cli, std::string reason)
 		setbuffer(err_msg, admin->client_fd);
 		return;
 	}
-	if (this->onChannel(cli))
+	if (!this->onChannel(cli))
 	{
-		err_msg = getUserInfo(cli, false) + ERR_USERONCHANNEL(admin->nickname, cli->nickname, this->get_name());
+		err_msg = getUserInfo(cli, false) + ERR_NOTONCHANNEL(cli->nickname, this->get_name());
 		setbuffer(err_msg, cli->client_fd);
 		return;
 	}
-	rmvUser(cli);
 	SendToAllClient(getUserInfo(cli, true) + " KICK " + this->get_name() + " " + cli->nickname + " : " + (reason.empty() ? "bad content" : reason) + "\r\n");
+	rmvUser(cli);
 }
 
 void channel::SendToAllClient(std::string buffer)
@@ -288,9 +288,8 @@ void channel::PART(Client *cli, std::string reason)
 	}
 	else
 	{
-		std::cout << "on chanel \n";
-		this->rmvUser(cli);
 		SendToAllClient(cli->nickname + " has leave " + this->_name + " because " + reason + "\r\n");
+		this->rmvUser(cli);
 	}
 }
 
@@ -427,7 +426,7 @@ void channel::who(Client *cli, Client *user)
 {
 	std::string rpl_msg;
 
-	rpl_msg += ": " + cli->servername + " 352 " + cli->nickname + " " + this->get_name() + " " + user->username + " " + user->username + " " + user->client_ip + " " + user->nickname + " H";
+	rpl_msg += ":" + cli->servername + " 352 " + cli->nickname + " " + this->get_name() + " " + user->username + " " + user->username + " " + user->client_ip + " " + user->nickname + " H";
 	if (isAlpha(user))
 		rpl_msg += "@";
 	rpl_msg += ":0 realname\r\n";
