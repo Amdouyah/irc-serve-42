@@ -134,7 +134,6 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 
 			std::string pass ;
 			ss >> pass >> pass;
-			std::cout << "pass: " << pass << std::endl;
 			if (pass == this->_server.password)
 			{
 				(*it)->password = true;
@@ -154,7 +153,6 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					std::stringstream ss(*it2);
 					std::string nick;
 					ss >> nick >> nick;
-					std::cout << "nick: " << nick << std::endl;
 					deque_itr clientPre = _clients.begin();
 					for (; clientPre != _clients.end(); clientPre++)
 					{
@@ -226,11 +224,13 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		{
 			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 			{
-				if ((*chan)->get_name() == dest.substr(1))
+				if ((*chan)->get_name() == dest)
 				{
 					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); it3++)
 					{
-						std::string msg_to_send = channel::getUserInfo(*it, 0) + "PRIVMSG " + (*chan)->get_name() + ":" + msg + "\r\n";
+						if((*it3)->nickname == (*it)->nickname)
+							continue;
+						std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*chan)->get_name() + msg + "\r\n";
 						send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
 					break;
@@ -239,7 +239,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		}
 		else if (dest == "jhonny")
 		{
-			std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it)->nickname + " : " + this->_bot.game(it, msg) + "\r\n";
+			std::string msg_to_send = ":jhonny!jhonny@localhost PRIVMSG " + (*it)->nickname + " : " + this->_bot.game(it, msg) + "\r\n";
 			send((*it)->client_fd, (msg_to_send.c_str()), msg_to_send.length(), 0);
 		}
 		else
@@ -298,6 +298,7 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 				{
 					if ((*trgt)->nickname == target)
 					{
+						// kick khassra
 						(*chanel)->KICK(*it, *trgt, reason);
 						break;
 					}
@@ -321,13 +322,19 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 
 	if ((*it2).find("INVITE") == 0)
 	{
-		std::string nicknam = std::string((*it2).substr(7, (*it2).find(" ", 7) - 7));
-		std::string channnel_name = std::string((*it2).substr((*it2).find("#") + 1, (*it2).length() - (*it2).find("#") - 1));
+		std::string line = *it2;
+		std::stringstream ss(line);
+		std::string word;
+		std::vector<std::string> words;
+		while (ss >> word)
+			words.push_back(word);
+		std::string channel_name = words[1];
+		std::string nicknam = words[2];
 		bool found = false;
 		deque_chan it3 = _channels.begin();
 		for (; it3 != _channels.end(); it3++)
 		{
-			if ((*it3)->get_name() == channnel_name)
+			if ((*it3)->get_name() == channel_name)
 			{
 				found = true;
 				break;
@@ -335,7 +342,7 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		}
 		if (found == false)
 		{
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channnel_name);
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
 			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
@@ -343,8 +350,11 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		{
 			if ((*it4)->nickname == nicknam)
 			{
-				std::string msg_to_send = RPL_INVITING((*it)->nickname, nicknam, channnel_name);
-				send((*it4)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+
+				// ************ hadchi ba9i matesstach
+				// std::string msg_to_send = RPL_INVITING((*it)->nickname, nicknam, channel_name);
+				// send((*it4)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				
 				(*it3)->INVITE(*it, *it4);
 				break;
 			}
@@ -503,8 +513,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (mode_m(it, it2) == 1)
 					continue;
-				else if (WHO(it, it2) == 1)
-					continue;
+				// else if (WHO(it, it2) == 1)
+				// 	continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));

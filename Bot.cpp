@@ -1,8 +1,10 @@
 #include "Bot.hpp"
+#include <sstream>
+
 
 Bot::Bot()
 {
-    _name = "johny";
+    _name = "jhonny";
 }
 
 std::string Bot::game(deque_itr it, std::string msg)
@@ -19,7 +21,10 @@ std::string Bot::game(deque_itr it, std::string msg)
     }
     if (flag == true)
     {
-        int guess = std::stoi(msg);
+        std::string message =  msg.substr(2);
+        std::stringstream ss(message);
+        int guess;
+        ss>> guess;
         if (guess == tmp->number)
         {
             std::string rtrn = std::string("Congratulations ") + (*it)->nickname + std::string(" you guessed the number in ") + std::to_string(tmp->tries) + std::string(" tries \n");
@@ -54,9 +59,9 @@ std::string Bot::game(deque_itr it, std::string msg)
         players temp;
         temp.name = (*it)->nickname;
         temp.tries = 0;
-        temp.number = rand() % 500;
+        temp.number = rand() % 200;
         _players.push_back(temp);
-        std::string rtrn = std::string("Welcome to the game ") + (*it)->nickname + std::string(" I have a number between 0 and 500, try to guess it, you have 7 tries.\n i will tell you if the number is higher or lower than the one you guessed, good luck");
+        std::string rtrn = std::string("Welcome to the game ") + (*it)->nickname + std::string(" I have a number between 0 and 200, try to guess it, you have 7 tries.\n i will tell you if the number is higher or lower than the one you guessed, good luck");
         return rtrn;
     }
     return "";
