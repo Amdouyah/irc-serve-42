@@ -1,5 +1,4 @@
 #include "Server.hpp"
-#include <sstream>
 
 void Server::signal_handler(int sig)
 {
@@ -513,8 +512,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (mode_m(it, it2) == 1)
 					continue;
-				// else if (WHO(it, it2) == 1)
-				// 	continue;
+				else if (WHO(it, it2) == 1)
+					continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
