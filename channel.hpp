@@ -34,13 +34,15 @@ class channel{
 		std::string 		passwd;
 
 		std::string Topic;
-		std::string modes;
 		bool 		has_topic;
 		
 		Client 		creat;
 		
 		bool		limitsuser;
 		int			maxUsers;
+
+		bool 		oper;
+		std::string modes_;
 
 
 	public:
@@ -78,6 +80,7 @@ class channel{
 		bool		isAlpha(Client *cli);
 		bool		isInvit(Client *cli);
 
+		
 		static std::string getUserInfo(Client *cli, bool bil);
 		
 		//admin howa li ghay kicky
@@ -91,6 +94,7 @@ class channel{
 		void 		rpl_who(Client *cli);
 
 
+		void 		check_modes();
 		void 		SetModes(Client *admin, char c, std::string param);
 		void 		RemModes(Client *admin, char c, std::string param);
 		void		valid_Modes(Client *cli, std::string mode, std::string param);
