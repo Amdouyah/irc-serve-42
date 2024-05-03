@@ -216,6 +216,7 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	}
 	else
 	{
+		std::cout  << modes_ << std::endl;
 		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), modes_);
 		setbuffer(rpl_msg, admin->client_fd);
 	}
@@ -231,8 +232,10 @@ void channel::valid_Modes(Client *cli, std::string mode, std::string param)
 	{
 		for (; i < mode.size(); ++i)
 		{
-			if (mode[i] == 't' || mode[i] == 'k' || mode[i] == 'i' || mode[i] == 'l' || mode[i] == 'o')
+			if (mode[i] == 't' || mode[i] == 'k' || mode[i] == 'i' || mode[i] == 'l' || mode[i] == 'o'){
 				SetModes(cli, mode[i], param);
+				check_modes();
+			}
 			else
 			{
 				rpl_msg = getUserInfo(cli, false) + ERR_UNKNOWNMODE(cli->nickname, mode[i]);
@@ -244,8 +247,10 @@ void channel::valid_Modes(Client *cli, std::string mode, std::string param)
 	{
 		for (i = 1; i < mode.size(); ++i)
 		{
-			if (mode[i] == 't' || mode[i] == 'k' || mode[i] == 'i' || mode[i] == 'l' || mode[i] == 'o')
+			if (mode[i] == 't' || mode[i] == 'k' || mode[i] == 'i' || mode[i] == 'l' || mode[i] == 'o'){
 				RemModes(cli, mode[i], param);
+				check_modes();
+			}
 			else
 			{
 				rpl_msg = getUserInfo(cli, false) + ERR_UNKNOWNMODE(cli->nickname, mode[i]);
@@ -317,13 +322,13 @@ void	channel::check_modes(){
 	std::string addModes;
 	if(has_pass)
 		addModes += "k";
-	else if(invitOnly)
+	if(invitOnly)
 		addModes += "i";
-	else if(limitsuser)
+	if(limitsuser)
 		addModes += "l";
-	else if(oper)
+	if(oper)
 		addModes += "o";
-	else if(has_topic)
+	if(has_topic)
 		addModes += "t";
 	this->modes_ = addModes;
 }
@@ -349,7 +354,7 @@ void channel::addAdmin(Client *cli, std::string param)
 	if (newopp)
 	{
 		set_Alpha(newopp);
-		SendToAllClient(getUserInfo(newopp, true) + " MODE #" + this->get_name() + " +o" + param);
+		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, "+o"));
 	}
 	else
 	{
@@ -371,7 +376,7 @@ void channel::RemAdmin(Client *cli, std::string param)
 	if (newopp)
 	{
 		RmvAlpha(newopp);
-		SendToAllClient(getUserInfo(newopp, true) + " MODE #" + this->get_name() + " -o" + param);
+		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, "-o"));
 	}
 	else
 	{
@@ -391,12 +396,12 @@ void channel::changInviteMode(Client *cli, int i)
 	if (i == 1)
 	{
 		invitOnly = true;
-		SendToAllClient(getUserInfo(cli, true) + " MODE " + this->get_name() + " +i");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "+i"));
 	}
 	else
 	{
 		invitOnly = false;
-		SendToAllClient(getUserInfo(cli, true) + " MODE " + this->get_name() + " -i");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-i"));
 	}
 }
 void channel::changMaxUser(Client *cli, int i, std::string &param)
@@ -428,19 +433,19 @@ void channel::changMaxUser(Client *cli, int i, std::string &param)
 		{
 			limitsuser = true;
 			set_MaxUser(max);
-			SendToAllClient(getUserInfo(cli, true) + " MODE #" + this->get_name() + " +l");
+			SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "+l"));
 		}
 	}
 	else
 	{
-		if (param.empty())
-		{
-			rpl_msg = getUserInfo(cli, false) + ERR_NEEDMOREPARAMS(cli->nickname, " MODE" + " -l");
-			setbuffer(rpl_msg, cli->client_fd);
-			return;
-		}
+		// if (param.empty())
+		// {
+		// 	rpl_msg = getUserInfo(cli, false) + ERR_NEEDMOREPARAMS(cli->nickname, " MODE" + " -l");
+		// 	setbuffer(rpl_msg, cli->client_fd);
+		// 	return;
+		// }
 		limitsuser = false;
-		SendToAllClient(getUserInfo(cli, true) + " MODE #" + this->get_name() + " -l");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-l"));
 	}
 }
 
@@ -484,13 +489,13 @@ void channel::changKey(Client *cli, int i, std::string &param)
 		{
 			set_pass(param);
 			has_pass = true;
-			SendToAllClient(getUserInfo(cli, true) + " MODE #" + this->get_name() + " +k");
+			SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "+k"));
 		}
 	}
 	else
 	{
 		has_pass = false;
-		SendToAllClient(getUserInfo(cli, true) + "MODE #" + this->get_name() + " -k");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-k"));
 	}
 }
 void channel::changeTopic(Client *cli, int i)
@@ -505,11 +510,11 @@ void channel::changeTopic(Client *cli, int i)
 	if (i == 1)
 	{
 		has_topic = true;
-		SendToAllClient(getUserInfo(cli, true) + " MODE #" + this->get_name() + " +t");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "+t"));
 	}
 	else
 	{
 		has_topic = false;
-		SendToAllClient(getUserInfo(cli, true) + " MODE #" + this->get_name() + " -t");
+		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-t"));
 	}
 }
