@@ -225,7 +225,13 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 			{
 				if ((*chan)->get_name() == dest)
 				{
-					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); it3++)
+					if (!(*chan)->onChannel(*it))
+					{
+						msg = (*chan)->getUserInfo((*it), false) + ERR_NOTONCHANNEL((*it)->nickname, (*chan)->get_name());
+						channel::setbuffer(msg, (*it)->client_fd);
+						return 0;
+					}
+					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); ++it3)
 					{
 						if((*it3)->nickname == (*it)->nickname)
 							continue;

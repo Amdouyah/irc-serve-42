@@ -200,10 +200,7 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	if (!mode.empty())
 	{
 		if (this->isAlpha(admin))
-		{
 			valid_Modes(admin, mode, param);
-		}
-		// valid_mode();
 		else
 		{
 			rpl_msg = getUserInfo(admin, false) + ERR_CHANOPRIVSNEEDED(admin->nickname, this->get_name());
@@ -213,7 +210,8 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	}
 	else
 	{
-		// should print all modes
+		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), "");
+		setbuffer(rpl_msg, admin->client_fd);
 	}
 }
 void channel::valid_Modes(Client *cli, std::string mode, std::string param)
@@ -288,7 +286,8 @@ void channel::PART(Client *cli, std::string reason)
 	}
 	else
 	{
-		SendToAllClient(cli->nickname + " has leave " + this->_name + " because " + reason + "\r\n");
+		// :client0!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.IP PART #chan :Leaving
+		SendToAllClient(getUserInfo(cli, true) + " PART " + this->get_name() + " " + reason + "\r\n");
 		this->rmvUser(cli);
 	}
 }

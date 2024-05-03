@@ -8,10 +8,10 @@
 
 
 #define ERR_NEEDMOREPARAMS(client, command)				(" 461 " + client + " " + command + " :Not enough parameters\r\n")
-#define ERR_USERNOTINCHANNEL(client, nick, chan) 		(" 441" + client + " " + nick + " " + chan + " :They aren't on that channel\r\n")
-#define ERR_NOTONCHANNEL(client, chan)  				(" 442" + client + " " + chan +  " :You're not on that channel\r\n")
-#define ERR_CHANOPRIVSNEEDED(client, chan)				(" 482" + client + " " + chan +  " :You're not channel operator\r\n")
-#define ERR_USERONCHANNEL(client, nick, chan)			(" 443" + client + " " + nick + " " + chan +  " :is already on channel\r\n")
+#define ERR_USERNOTINCHANNEL(client, nick, chan) 		(" 441 " + client + " " + nick + " " + chan + " :They aren't on that channel\r\n")
+#define ERR_NOTONCHANNEL(client, chan)  				(" 442 " + client + " " + chan +  " :You're not on that channel\r\n")
+#define ERR_CHANOPRIVSNEEDED(client, chan)				(" 482 " + client + " " + chan +  " :You're not channel operator\r\n")
+#define ERR_USERONCHANNEL(client, nick, chan)			(" 443 " + client + " " + nick + " " + chan +  " :is already on channel\r\n")
 #define RPL_INVITING(client, nick, chan) 				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
 #define ERR_UNKNOWNMODE(nick, mode)						(" 472 " + nick + " " + mode + " :is unknown mode char to me\r\n")
@@ -19,10 +19,11 @@
 #define ERR_NOSUCHCHANNEL(client, chan)	   				(" 403 " + client + " " + chan + " :No such channel\r\n")
 #define ERR_PASSWDMISMATCH()							(" 464 :Password incorrect\r\n")
 #define ERR_NEEDMOREPARAMS1()							(" 461 :Not enough parameters\r\n")
-#define RPL_WELCOME()									("001 :Welcome to the Internet Relay Network \r\n")
+#define RPL_WELCOME()									(" 001 :Welcome to the Internet Relay Network \r\n")
 #define RPL_INVITING(client, nick, chan)				(" 341 " + client + " " + nick + " " + chan + "\r\n")
 #define ERR_UNKNOWNCOMMAND(client, command)				(" 421 " + client + " " + command + " :Unknown command\r\n")
 #define RPL_ENDOFWHOIS(cli, chan)						(" 315 " + cli + " " + chan + " :End of /WHOIS list\r\n")
+#define	RPL_CHANNELMODEIS(cli, chan, mode)				(" 324 " + cli + " " + chan + " +" + mode + "\r\n")
 
 class channel{
 	private:
@@ -33,6 +34,7 @@ class channel{
 		std::string 		passwd;
 
 		std::string Topic;
+		std::string modes;
 		bool 		has_topic;
 		
 		Client 		creat;
