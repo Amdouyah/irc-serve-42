@@ -59,7 +59,9 @@ public:
 	int part(deque_itr &it, std::vector<std::string>::iterator &it2);
 	int nickname(deque_itr &it, std::string line);
 	int mode_m(deque_itr &it, std::vector<std::string>::iterator &it2);
+	int topic_m(deque_itr &it, std::vector<std::string>::iterator &it2);
 	int WHO(deque_itr &it, std::vector<std::string>::iterator &it2);
+	void _Topic(deque_itr &it, std::string line);
 
 		~Server();
 

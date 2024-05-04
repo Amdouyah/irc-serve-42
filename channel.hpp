@@ -24,6 +24,9 @@
 #define ERR_UNKNOWNCOMMAND(client, command)				(" 421 " + client + " " + command + " :Unknown command\r\n")
 #define RPL_ENDOFWHOIS(cli, chan)						(" 315 " + cli + " " + chan + " :End of /WHOIS list\r\n")
 #define	RPL_CHANNELMODEIS(cli, chan, mode)				(" 324 " + cli + " " + chan + " " + mode + "\r\n")
+#define RPL_NOTOPIC(cli, chan)							(" 331 " + cli + " " + chan + " :No topic is set\r\n")
+#define RPL_TOPIC(cli, chan, topic)						(" 332 " + cli + " " + chan + " :" + topic + "\r\n")
+
 
 class channel{
 	private:
@@ -89,6 +92,7 @@ class channel{
 		void		INVITE(Client *admin, Client *cli);
 		void 		MODE(Client *admin, std::string mode, std::string param);
 		void 		PART(Client *cli, std::string reason);
+		void 		TOPIC(Client *cli, std::string topicmsg);
 
 		void 		who(Client *cli, Client *user);
 		void 		rpl_who(Client *cli);
