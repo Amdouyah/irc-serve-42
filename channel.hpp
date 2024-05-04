@@ -26,7 +26,7 @@
 #define	RPL_CHANNELMODEIS(cli, chan, mode)				(" 324 " + cli + " " + chan + " " + mode + "\r\n")
 #define RPL_NOTOPIC(cli, chan)							(" 331 " + cli + " " + chan + " :No topic is set\r\n")
 #define RPL_TOPIC(cli, chan, topic)						(" 332 " + cli + " " + chan + " :" + topic + "\r\n")
-
+#define RPL_ENDOFNAMES(cli, channel)					(" 366 " + cli + " " + chan + " :End of /NAMES list\r\n")
 
 class channel{
 	private:
@@ -96,6 +96,7 @@ class channel{
 
 		void 		who(Client *cli, Client *user);
 		void 		rpl_who(Client *cli);
+		void 		rpl_list(Client *cli);
 
 
 		void 		check_modes();

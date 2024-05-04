@@ -261,8 +261,9 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	}
 	else
 	{
-		std::cout  << modes_ << std::endl;
+		// std::cout  << modes_ << std::endl;
 		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), modes_);
+		rpl_list(admin);
 		setbuffer(rpl_msg, admin->client_fd);
 	}
 }
@@ -556,4 +557,19 @@ void channel::changeTopic(Client *cli, int i)
 		has_topic = false;
 		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-t"));
 	}
+}
+
+
+void	channel::rpl_list(Client *cli){
+	std::string rpl_msg;
+
+	rpl_msg += getUserInfo(cli, false) + " 353 " + cli->nickname + " = " + this->get_name() + " :";
+	for(size_t i = 0; i < beta_users.size() ; ++i){
+		if(isAlpha(beta_users[i]))
+			rpl_msg += "@";
+		rpl_msg += beta_users[i]->nickname + " ";
+	}
+	rpl_msg += "\r\n";
+	setbuffer(rpl_msg, cli->client_fd);
+	setbuffer(getUserInfo(cli, false) + RPL_ENDOFWHOIS(cli->nickname, this->get_name()), cli->client_fd);
 }
