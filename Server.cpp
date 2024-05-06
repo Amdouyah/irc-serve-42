@@ -520,25 +520,24 @@ void Server::read_data_from_socket(int i)
 		{
 			for (; it2 != lines.end(); it2++)
 			{
-				std::cout << *it2 << std::endl;
-				if (privmsg(it2, it) == 1)
+				if (privmsg(it2, it))
 					continue;
-				else if (join(it, it2) == 1)
+				else if (join(it, it2))
 					continue;
-				else if (kick_server(it, it2) == 1)
+				else if (kick_server(it, it2))
 					continue;
-				else if (invite_to_channel(it, it2) == 1)
+				else if (invite_to_channel(it, it2))
 					continue;
-				else if (part(it, it2) == 1)
+				else if (part(it, it2))
 					continue;
-				else if (mode_m(it, it2) == 1)
+				else if (mode_m(it, it2))
 					continue;
-				else if (WHO(it, it2) == 1)
+				else if (WHO(it, it2))
 					continue;
-				else if (topic_m(it, it2) == 1)
+				else if (topic_m(it, it2))
 					continue;
-				else if (nickname(it, *it2) == 1)
-					continue;
+				// else if (nickname(it, *it2)) // mabghach hadchi ikhdam tal ghada
+				// 	continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
@@ -651,12 +650,12 @@ int Server::nickname(deque_itr &it, std::string line)
 				return 1;
 			}
 		}
-		std::string send_msg = channel::getUserInfo(*it, 0) + "NICK :" + nick;
+
+		std::string send_msg = channel::getUserInfo(*it, 1) + "NICK :" + nick;
+		send((*it)->client_fd, send_msg.c_str(), send_msg.length(), 0);
 		for (deque_itr client = _clients.begin(); client != _clients.end(); client++)
 		{
-			if ((*it)->nickname == (*client)->nickname)
-				continue;
-			send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
+			// send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
 		}
 		(*it)->nickname = nick;
 		return 1;
