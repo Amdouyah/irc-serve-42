@@ -435,7 +435,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 							}
 							if (invite)
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) +"473 " +  (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
+								std::string msg_to_send = channel::getUserInfo((*it), 0) + "473 " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
 								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
@@ -446,7 +446,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			if (found == false)
 			{
 				time_t currentTime;
-    			time(&currentTime);
+				time(&currentTime);
 				channel *new_channel = new channel(channel_name);
 				std::string timeString = ctime(&currentTime);
 				new_channel->creation_time = timeString;
@@ -477,6 +477,7 @@ void Server::read_data_from_socket(int i)
 	std::memset(&buffer, '\0', sizeof buffer); // Clear the buffer
 	bytes_read = recv(sender_fd, buffer, BUFSIZ, 0);
 	buffer[bytes_read] = '\0';
+
 	if (bytes_read <= 0)
 	{
 		if (bytes_read == 0)
@@ -503,7 +504,11 @@ void Server::read_data_from_socket(int i)
 			if ((*it)->client_fd == sender_fd)
 				break;
 		}
-		std::stringstream ss(buffer);
+		std::string command_buffer;
+		bool command_ready = prepare_buffer(buffer, it, command_buffer);
+		if (!command_ready)
+			return;
+		std::stringstream ss(command_buffer);
 		std::string line;
 		std::vector<std::string> lines;
 		while (std::getline(ss, line, '\n'))
@@ -515,6 +520,7 @@ void Server::read_data_from_socket(int i)
 		{
 			for (; it2 != lines.end(); it2++)
 			{
+				std::cout << *it2 << std::endl;
 				if (privmsg(it2, it) == 1)
 					continue;
 				else if (join(it, it2) == 1)
@@ -529,9 +535,9 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (WHO(it, it2) == 1)
 					continue;
-				else if(topic_m(it, it2) == 1)
+				else if (topic_m(it, it2) == 1)
 					continue;
-				else if(nickname(it, *it2) == 1)
+				else if (nickname(it, *it2) == 1)
 					continue;
 				else
 				{
@@ -543,6 +549,15 @@ void Server::read_data_from_socket(int i)
 	}
 }
 
+bool Server::prepare_buffer(char *buffer, deque_itr &it, std::string &buffer2)
+{
+	(*it)->command += buffer;
+	if ((*it)->command.find("\n") == std::string::npos)
+		return false;
+	buffer2 = (*it)->command;
+	(*it)->command.clear();
+	return true;
+}
 int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("WHO") == 0)
@@ -588,7 +603,6 @@ int Server::topic_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 	}
 	return 0;
 }
-
 
 int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
@@ -638,9 +652,9 @@ int Server::nickname(deque_itr &it, std::string line)
 			}
 		}
 		std::string send_msg = channel::getUserInfo(*it, 0) + "NICK :" + nick;
-		for(deque_itr client= _clients.begin(); client != _clients.end(); client++)
+		for (deque_itr client = _clients.begin(); client != _clients.end(); client++)
 		{
-			if((*it)->nickname == (*client)->nickname)
+			if ((*it)->nickname == (*client)->nickname)
 				continue;
 			send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
 		}
@@ -690,7 +704,8 @@ void Server::_Topic(deque_itr &it, std::string line)
 	std::string channel_n, param, result;
 	std::istringstream input(line);
 	input >> channel_n;
-	while (input){
+	while (input)
+	{
 		input >> param;
 		result += param + " ";
 		param.clear();

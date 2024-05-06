@@ -16,7 +16,7 @@ class Client {
     std::string servername;
     std::string realname;
     std::string ip_adress;
-    bool invited;
+    std::string command;
     bool password;
     bool registered;
 	struct sockaddr_in client_addr;

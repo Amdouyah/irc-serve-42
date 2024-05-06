@@ -63,6 +63,7 @@ public:
 	int topic_m(deque_itr &it, std::vector<std::string>::iterator &it2);
 	int WHO(deque_itr &it, std::vector<std::string>::iterator &it2);
 	void _Topic(deque_itr &it, std::string line);
+	bool prepare_buffer(char *buffer, deque_itr &it, std::string &buffer2);
 
 		~Server();
 
