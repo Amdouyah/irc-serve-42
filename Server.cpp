@@ -531,6 +531,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if(topic_m(it, it2) == 1)
 					continue;
+				else if(nickname(it, *it2) == 1)
+					continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
@@ -622,7 +624,9 @@ int Server::nickname(deque_itr &it, std::string line)
 {
 	if (line.find("NICK") == 0)
 	{
-		std::string nick = line.substr(5);
+		std::stringstream ss(line);
+		std::string nick;
+		ss >> nick >> nick;
 		deque_itr it2 = _clients.begin();
 		for (; it2 != _clients.end(); it2++)
 		{
@@ -632,6 +636,13 @@ int Server::nickname(deque_itr &it, std::string line)
 				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 				return 1;
 			}
+		}
+		std::string send_msg = channel::getUserInfo(*it, 0) + "NICK :" + nick;
+		for(deque_itr client= _clients.begin(); client != _clients.end(); client++)
+		{
+			if((*it)->nickname == (*client)->nickname)
+				continue;
+			send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
 		}
 		(*it)->nickname = nick;
 		return 1;
