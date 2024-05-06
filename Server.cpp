@@ -529,6 +529,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (WHO(it, it2) == 1)
 					continue;
+				else if(topic_m(it, it2) == 1)
+					continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
@@ -574,6 +576,17 @@ int Server::mode_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 	}
 	return 0;
 }
+int Server::topic_m(deque_itr &it, std::vector<std::string>::iterator &it2)
+{
+	if ((*it2).find("TOPIC") == 0)
+	{
+		std::string evrything = std::string((*it2).substr(5));
+		_Topic(it, evrything);
+		return 1;
+	}
+	return 0;
+}
+
 
 int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
@@ -658,6 +671,22 @@ void Server::MODE(deque_itr &it, std::string line)
 	channel *chan = get_chan(channel_n);
 	if (chan)
 		chan->MODE(*it, mode, param);
+	else
+		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
+}
+void Server::_Topic(deque_itr &it, std::string line)
+{
+	std::string channel_n, param, result;
+	std::istringstream input(line);
+	input >> channel_n;
+	while (input){
+		input >> param;
+		result += param + " ";
+		param.clear();
+	}
+	channel *chan = get_chan(channel_n);
+	if (chan)
+		chan->TOPIC((*it), result);
 	else
 		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
 }

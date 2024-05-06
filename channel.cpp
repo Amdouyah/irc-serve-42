@@ -199,6 +199,51 @@ Client *channel::getUser(std::string name)
 	}
 	return NULL;
 }
+void	channel::TOPIC(Client *cli, std::string topicmsg){
+	std::string err_msg;
+	std::string rpl_msg;
+	if (!this->onChannel(cli))
+	{
+		err_msg = getUserInfo(cli, false) + ERR_NOTONCHANNEL(cli->nickname, this->get_name());
+		setbuffer(err_msg, cli->client_fd);
+		return;
+	}
+	if(has_topic){
+		if (!this->isAlpha(cli))
+		{
+			err_msg = getUserInfo(cli, false) + ERR_CHANOPRIVSNEEDED(cli->nickname, this->get_name());
+			setbuffer(err_msg, cli->client_fd);
+			return;
+		}
+		if(!topicmsg.empty())
+		{
+			set_topic(topicmsg);
+			rpl_msg = getUserInfo(cli, true) + RPL_TOPIC(cli->nickname, this->get_name(), topicmsg);
+			setbuffer(rpl_msg, cli->client_fd);
+			return;
+		}
+		else{
+			rpl_msg = getUserInfo(cli, false) + RPL_NOTOPIC(cli->nickname, this->get_name());
+			setbuffer(rpl_msg, cli->client_fd);
+			return;
+		}
+	}
+	else{
+		if(!topicmsg.empty())
+		{
+			set_topic(topicmsg);
+			rpl_msg = getUserInfo(cli, true) + RPL_TOPIC(cli->nickname, this->get_name(), topicmsg);
+			setbuffer(rpl_msg, cli->client_fd);
+			return;
+		}
+		else{
+			rpl_msg = getUserInfo(cli, false) + RPL_NOTOPIC(cli->nickname, this->get_name());
+			setbuffer(rpl_msg, cli->client_fd);
+			return;
+		}
+	}
+}
+
 
 void channel::MODE(Client *admin, std::string mode, std::string param)
 {
@@ -217,6 +262,7 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	else
 	{
 		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), modes_);
+		rpl_list(admin);
 		setbuffer(rpl_msg, admin->client_fd);
 	}
 }
@@ -437,12 +483,6 @@ void channel::changMaxUser(Client *cli, int i, std::string &param)
 	}
 	else
 	{
-		// if (param.empty())
-		// {
-		// 	rpl_msg = getUserInfo(cli, false) + ERR_NEEDMOREPARAMS(cli->nickname, " MODE" + " -l");
-		// 	setbuffer(rpl_msg, cli->client_fd);
-		// 	return;
-		// }
 		limitsuser = false;
 		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-l"));
 	}
@@ -516,4 +556,19 @@ void channel::changeTopic(Client *cli, int i)
 		has_topic = false;
 		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-t"));
 	}
+}
+
+
+void	channel::rpl_list(Client *cli){
+	std::string rpl_msg;
+
+	rpl_msg += getUserInfo(cli, false) + " 353 " + cli->nickname + " = " + this->get_name() + " :";
+	for(size_t i = 0; i < beta_users.size() ; ++i){
+		if(isAlpha(beta_users[i]))
+			rpl_msg += "@";
+		rpl_msg += beta_users[i]->nickname + " ";
+	}
+	rpl_msg += "\r\n";
+	setbuffer(rpl_msg, cli->client_fd);
+	setbuffer(getUserInfo(cli, false) + RPL_ENDOFWHOIS(cli->nickname, this->get_name()), cli->client_fd);
 }
