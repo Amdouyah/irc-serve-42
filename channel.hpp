@@ -40,12 +40,13 @@ class channel{
 		
 		bool		limitsuser;
 		int			maxUsers;
-
 		bool 		oper;
 		std::string modes_;
 
 
 	public:
+		//tatssaybe liha getter o ssetter please
+		std::string	creation_time;
 		channel();
 
 

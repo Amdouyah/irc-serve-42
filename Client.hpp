@@ -15,6 +15,7 @@ class Client {
     std::string hostname;
     std::string servername;
     std::string realname;
+    std::string ip_adress;
     bool invited;
     bool password;
     bool registered;

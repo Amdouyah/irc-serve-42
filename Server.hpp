@@ -4,6 +4,7 @@
 #include <iostream>
 #include "channel.hpp"
 #include <string>
+#include <ctime>
 #include "Bot.hpp"
 #include <errno.h>
 #include <netdb.h>

@@ -216,7 +216,6 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	}
 	else
 	{
-		std::cout  << modes_ << std::endl;
 		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), modes_);
 		setbuffer(rpl_msg, admin->client_fd);
 	}

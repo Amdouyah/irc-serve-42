@@ -115,8 +115,8 @@ void Server::accept_new_connection(int server_socket)
 	add_to_poll_fds(client_fd);
 	Client *new_client = new Client();
 	new_client->client_fd = client_fd;
-	new_client->client_addr = client_addr;												 // Save client address
-	inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN); // Fix: Include the necessary header file
+	new_client->client_addr = client_addr;
+	new_client->ip_adress = inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN);
 	new_client->state = 0;
 	_clients.push_back(new_client);
 }
@@ -131,7 +131,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 		{
 			std::stringstream ss(*it2);
 
-			std::string pass ;
+			std::string pass;
 			ss >> pass >> pass;
 			if (pass == this->_server.password)
 			{
@@ -170,11 +170,11 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					std::string parm;
 					std::string parm1;
 					std::string parm2;
-					std::string parm3;	
+					std::string parm3;
 					std::string realname;
-					ss >> parm >> parm >> parm1 >> parm2 ;
-					while(ss>>parm3)
-						realname += parm3+ " ";
+					ss >> parm >> parm >> parm1 >> parm2;
+					while (ss >> parm3)
+						realname += parm3 + " ";
 					if (realname.find(":") != 0)
 					{
 						std::string msg_to_send = ERR_NEEDMOREPARAMS1();
@@ -217,7 +217,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 			words.push_back(word);
 		std::string dest = words[1];
 		std::string msg;
-		for(int i = 2; i < words.size(); i++)
+		for (int i = 2; i < words.size(); i++)
 			msg += " " + words[i];
 		if (dest.find("#") == 0)
 		{
@@ -233,7 +233,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 					}
 					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); ++it3)
 					{
-						if((*it3)->nickname == (*it)->nickname)
+						if ((*it3)->nickname == (*it)->nickname)
 							continue;
 						std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*chan)->get_name() + msg + "\r\n";
 						send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
@@ -253,7 +253,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 			for (; it3 != _clients.end(); it3++)
 			{
 				if ((*it3)->nickname == dest)
-				{	
+				{
 					dest_fd = (*it3)->client_fd;
 					break;
 				}
@@ -267,7 +267,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 			}
 			else
 			{
-				std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it3)->nickname  + msg + "\r\n";
+				std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it3)->nickname + msg + "\r\n";
 				send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 		}
@@ -280,13 +280,13 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("KICK") == 0)
 	{
-		std::string line = *it2; 
+		std::string line = *it2;
 		std::stringstream ss(line);
 		std::string word;
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
-		
+
 		std::string channel_name = words[1];
 		std::string target = words[2];
 		std::string reason;
@@ -303,7 +303,6 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 				{
 					if ((*trgt)->nickname == target)
 					{
-						// kick khassra
 						(*chanel)->KICK(*it, *trgt, reason);
 						break;
 					}
@@ -356,10 +355,8 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 			if ((*it4)->nickname == nicknam)
 			{
 
-				// ************ hadchi ba9i matesstach
-				// std::string msg_to_send = RPL_INVITING((*it)->nickname, nicknam, channel_name);
-				// send((*it4)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-				
+				// ************ hadchi ba9i matesstac
+
 				(*it3)->INVITE(*it, *it4);
 				break;
 			}
@@ -391,56 +388,68 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 					if ((*chan)->get_name() == channel_name)
 					{
 						found = true;
-						if ((*chan)->Invit_Only() == true && (*chan)->HasPass() == false )
+						bool invite = (*chan)->Invit_Only();
+						bool has_password = (*chan)->HasPass();
+						bool limits = (*chan)->HasLimit();
+
+						if (invite)
 						{
 							deque_itr it3 = (*chan)->invited.begin();
 							for (; it3 != (*chan)->invited.end(); it3++)
 							{
 								if ((*it3)->nickname == (*it)->nickname)
 								{
-									(*chan)->beta_users.push_back(*it);
-									std::string msg_to_send = channel::getUserInfo((*it), 1) + "JOIN " + (*chan)->get_name() + "\r\n";
-									for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
-										send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+									invite = false;
 									break;
 								}
 							}
-							if (it3 == (*chan)->invited.end())
-							{
-								std::string msg_to_send = channel::getUserInfo((*it), 1) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
-								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-							}
 						}
-						else if ((*chan)->HasPass() == true)
+						if (has_password)
 						{
 							if (password == (*chan)->get_pass())
-							{
-								(*chan)->beta_users.push_back(*it); 
-								std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
-								for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
-									send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-							}
-							else
-							{
-								std::string msg_to_send = channel::getUserInfo((*it), 1) + " " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+k)\r\n";
-								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-							}
+								has_password = false;
 						}
-						else if ((*chan)->Invit_Only() == false && (*chan)->HasPass() == false)
+						if (limits)
+						{
+							if ((*chan)->get_maxUsers() > (*chan)->beta_users.size())
+								limits = false;
+						}
+						if (!limits && !has_password && !invite)
 						{
 							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
 							std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
 							for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
 								send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 						}
-
+						else
+						{
+							if (limits)
+							{
+								std::string msg_to_send = channel::getUserInfo((*it), 0) + "471 " + (*it)->nickname + " " + (*chan)->get_name() + " :Cannot join channel (+l)\r\n";
+								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							}
+							if (has_password)
+							{
+								std::string msg_to_send = channel::getUserInfo((*it), 0) + "475 " + (*it)->nickname + " " + (*chan)->get_name() + " :Cannot join channel (+k)\r\n";
+								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							}
+							if (invite)
+							{
+								std::string msg_to_send = channel::getUserInfo((*it), 0) +"473 " +  (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
+								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							}
+						}
 						break;
 					}
 				}
 			}
 			if (found == false)
 			{
+				time_t currentTime;
+    			time(&currentTime);
 				channel *new_channel = new channel(channel_name);
+				std::string timeString = ctime(&currentTime);
+				new_channel->creation_time = timeString;
 				new_channel->alpha_users.push_back(*it);
 				new_channel->beta_users.push_back(*it);
 				std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
@@ -534,7 +543,7 @@ int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("WHO") == 0)
 	{
-		std::string line = *it2; 
+		std::string line = *it2;
 		std::stringstream ss(line);
 		std::string word;
 		std::vector<std::string> words;
