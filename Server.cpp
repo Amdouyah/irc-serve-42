@@ -444,6 +444,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			}
 			if (found == false)
 			{
+				std::stringstream timeee;
 				time_t currentTime;
 				time(&currentTime);
 				channel new_channel(channel_name);
@@ -454,6 +455,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 				std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + new_channel.get_name() + "\r\n";
 				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 				_channels.push_back(new_channel);
+				// }
 			}
 		}
 		else
