@@ -448,8 +448,8 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 				time_t currentTime;
 				time(&currentTime);
 				channel new_channel(channel_name);
-				std::string timeString = ctime(&currentTime);
-				new_channel.creation_time = timeString;
+				timeee << currentTime;
+				new_channel.set_time(timeee.str());
 				new_channel.alpha_users.push_back(&(*it));
 				new_channel.beta_users.push_back(&(*it));
 				std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + new_channel.get_name() + "\r\n";

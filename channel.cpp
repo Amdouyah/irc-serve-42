@@ -15,6 +15,11 @@ channel::~channel()
 }
 channel::channel(std::string name) : _name(name)
 {
+	invitOnly = false;
+	has_pass = false;
+	has_topic = false;
+	oper = false;
+	limitsuser = false;
 }
 
 void channel::set_name(std::string name)
@@ -373,15 +378,15 @@ static int convertToInt(const std::string &str)
 
 void	channel::check_modes(){
 	std::string addModes;
-	if(has_pass)
+	if(this->has_pass)
 		addModes += "k";
-	if(invitOnly)
+	if(this->invitOnly)
 		addModes += "i";
-	if(limitsuser)
+	if(this->limitsuser)
 		addModes += "l";
-	if(oper)
+	if(this->oper)
 		addModes += "o";
-	if(has_topic)
+	if(this->has_topic)
 		addModes += "t";
 	this->modes_ = addModes;
 }
