@@ -77,10 +77,10 @@ class channel{
 		void set_Alpha(Client *cli);
 		void RmvAlpha(Client *cli);
 
-		bool Invit_Only();
-		bool HasTopic();
-		bool HasPass();
-		bool HasLimit();
+		bool 		Invit_Only();
+		bool 		HasTopic();
+		bool 		HasPass();
+		bool 		HasLimit();
 		bool 		onChannel(Client *cli);
 		bool		isAlpha(Client *cli);
 		bool		isInvit(Client *cli);

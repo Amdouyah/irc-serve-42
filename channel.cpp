@@ -407,7 +407,7 @@ void channel::addAdmin(Client *cli, std::string param)
 	if (newopp)
 	{
 		set_Alpha(newopp);
-		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, "+o"));
+		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, "+o " + newopp->nickname));
 	}
 	else
 	{
@@ -429,7 +429,7 @@ void channel::RemAdmin(Client *cli, std::string param)
 	if (newopp)
 	{
 		RmvAlpha(newopp);
-		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, "-o"));
+		SendToAllClient(getUserInfo(newopp, true) + RPL_CHANNELMODEIS(newopp->nickname, this->_name, " -o " + newopp->nickname));
 	}
 	else
 	{
