@@ -36,6 +36,9 @@ void channel::set_MaxUser(int max)
 	limitsuser = true;
 	maxUsers = max;
 }
+void channel::set_time(std::string time_){
+	this->creation_time = time_;
+}
 
 void channel::set_Alpha(Client *cli)
 {
@@ -65,6 +68,9 @@ std::string channel::get_topic()
 int channel::get_maxUsers()
 {
 	return this->maxUsers;
+}
+std::string channel::get_time(){
+	return this->creation_time;
 }
 
 bool channel::Invit_Only()
@@ -263,6 +269,8 @@ void channel::MODE(Client *admin, std::string mode, std::string param)
 	{
 		rpl_msg = getUserInfo(admin, true) + RPL_CHANNELMODEIS(admin->nickname, this->get_name(), modes_);
 		rpl_list(admin);
+		setbuffer(rpl_msg, admin->client_fd);
+		rpl_msg = getUserInfo(admin, true) + RPL_CREATIONTIME(admin->nickname, this->get_name(), this->get_time());
 		setbuffer(rpl_msg, admin->client_fd);
 	}
 }

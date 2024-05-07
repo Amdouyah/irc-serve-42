@@ -445,16 +445,20 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			}
 			if (found == false)
 			{
+				std::stringstream timeee;
 				time_t currentTime;
 				time(&currentTime);
 				channel *new_channel = new channel(channel_name);
-				std::string timeString = ctime(&currentTime);
-				new_channel->creation_time = timeString;
-				new_channel->alpha_users.push_back(*it);
-				new_channel->beta_users.push_back(*it);
-				std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
-				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-				_channels.push_back(new_channel);
+				if (!new_channel)
+					return 99;
+					timeee << currentTime;
+					new_channel->set_time(timeee.str());
+					new_channel->alpha_users.push_back(*it);
+					new_channel->beta_users.push_back(*it);
+					std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
+					send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+					_channels.push_back(new_channel);
+				// }
 			}
 		}
 		else
