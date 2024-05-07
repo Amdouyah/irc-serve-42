@@ -25,8 +25,10 @@
 #include <vector>
 #include "Client.hpp"
 #include <deque>
-#define deque_itr std::deque<Client *>::iterator
-#define deque_chan std::deque<channel *>::iterator
+#define deque_itr std::deque<Client >::iterator
+#define deque_itr1 std::deque<Client *>::iterator
+#define deque_chan std::deque<channel >::iterator
+#define deque_chan1 std::deque<channel *>::iterator
 
 struct _server_
 {
@@ -71,9 +73,9 @@ private:
 	int _error;
 	static bool _shutdown;
 	Bot _bot;
-	std::deque<Client *> _clients;
+	std::deque<Client > _clients;
 	_server_ _server;
-	std::deque<channel *> _channels;
+	std::deque<channel > _channels;
 };
 
 #endif /* ********************************************************** SERVER_H */

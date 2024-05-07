@@ -13,7 +13,7 @@ std::string Bot::game(deque_itr it, std::string msg)
     deque_player tmp = _players.begin();
     for (; tmp != _players.end(); tmp++)
     {
-        if (tmp->name == (*it)->nickname)
+        if (tmp->name == (*it).nickname)
         {
             flag = true;
             break;
@@ -27,7 +27,7 @@ std::string Bot::game(deque_itr it, std::string msg)
         ss>> guess;
         if (guess == tmp->number)
         {
-            std::string rtrn = std::string("Congratulations ") + (*it)->nickname + std::string(" you guessed the number in ") + std::to_string(tmp->tries) + std::string(" tries \n");
+            std::string rtrn = std::string("Congratulations ") + (*it).nickname + std::string(" you guessed the number in ") + std::to_string(tmp->tries) + std::string(" tries \n");
             _players.erase(tmp);
             return rtrn;
         }
@@ -49,7 +49,7 @@ std::string Bot::game(deque_itr it, std::string msg)
         }
         if (tmp->tries == 7)
         {
-            std::string rtrn = std::string("Sorry ") + (*it)->nickname + std::string(" you have used all your tries, the number was ") + std::to_string(tmp->number) + std::string("\n");
+            std::string rtrn = std::string("Sorry ") + (*it).nickname + std::string(" you have used all your tries, the number was ") + std::to_string(tmp->number) + std::string("\n");
             _players.erase(tmp);
             return rtrn;
         }
@@ -57,11 +57,11 @@ std::string Bot::game(deque_itr it, std::string msg)
     else
     {
         players temp;
-        temp.name = (*it)->nickname;
+        temp.name = (*it).nickname;
         temp.tries = 0;
         temp.number = rand() % 200;
         _players.push_back(temp);
-        std::string rtrn = std::string("Welcome to the game ") + (*it)->nickname + std::string(" I have a number between 0 and 200, try to guess it, you have 7 tries.\n i will tell you if the number is higher or lower than the one you guessed, good luck");
+        std::string rtrn = std::string("Welcome to the game ") + (*it).nickname + std::string(" I have a number between 0 and 200, try to guess it, you have 7 tries.\n i will tell you if the number is higher or lower than the one you guessed, good luck");
         return rtrn;
     }
     return "";
@@ -73,7 +73,7 @@ std::string Bot::card_game(deque_itr it, std::string msg)
     deque_cardplayer tmp = _card_players.begin();
     for (; tmp != _card_players.end(); tmp++)
     {
-        if (tmp->name == (*it)->nickname)
+        if (tmp->name == (*it).nickname)
         {
             flag = true;
             break;

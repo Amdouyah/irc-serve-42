@@ -113,11 +113,11 @@ void Server::accept_new_connection(int server_socket)
 	client_fd = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len);
 	fcntl(client_fd, F_SETFL, O_NONBLOCK); // Set non-blocking
 	add_to_poll_fds(client_fd);
-	Client *new_client = new Client();
-	new_client->client_fd = client_fd;
-	new_client->client_addr = client_addr;
-	new_client->ip_adress = inet_ntop(AF_INET, &(client_addr.sin_addr), new_client->client_ip, INET_ADDRSTRLEN);
-	new_client->state = 0;
+	Client new_client;
+	new_client.client_fd = client_fd;
+	new_client.client_addr = client_addr;
+	new_client.ip_adress = inet_ntop(AF_INET, &(client_addr.sin_addr), new_client.client_ip, INET_ADDRSTRLEN);
+	new_client.state = 0;
 	_clients.push_back(new_client);
 }
 
@@ -135,17 +135,17 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 			ss >> pass >> pass;
 			if (pass == this->_server.password)
 			{
-				(*it)->password = true;
+				(*it).password = true;
 			}
 			else
 			{
 				std::string msg_to_send = ERR_PASSWDMISMATCH();
-				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 		}
-		else if ((*it)->password == true)
+		else if ((*it).password == true)
 		{
-			if ((*it)->registered == false)
+			if ((*it).registered == false)
 			{
 				if ((*it2).find("NICK") == 0)
 				{
@@ -155,14 +155,14 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					deque_itr clientPre = _clients.begin();
 					for (; clientPre != _clients.end(); clientPre++)
 					{
-						if ((*clientPre)->nickname == nick)
+						if ((*clientPre).nickname == nick)
 						{
-							std::string msg_to_send = channel::getUserInfo(*it, 0) + " " + (*it)->nickname + " " + nick + ":Nickname is already in use\r\n";
-							send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							std::string msg_to_send = channel::getUserInfo(&(*it), 0) + " " + (*it).nickname + " " + nick + ":Nickname is already in use\r\n";
+							send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							return;
 						}
 					}
-					(*it)->nickname = nick;
+					(*it).nickname = nick;
 				}
 				else if ((*it2).find("USER") == 0)
 				{
@@ -178,28 +178,28 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					if (realname.find(":") != 0)
 					{
 						std::string msg_to_send = ERR_NEEDMOREPARAMS1();
-						send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+						send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
 					else
 					{
-						(*it)->username = parm;
-						(*it)->hostname = parm1;
-						(*it)->servername = parm2;
-						(*it)->realname = realname.substr(1);
+						(*it).username = parm;
+						(*it).hostname = parm1;
+						(*it).servername = parm2;
+						(*it).realname = realname.substr(1);
 					}
 				}
-				if ((*it)->nickname.size() > 0 && (*it)->username.size() > 0)
+				if ((*it).nickname.size() > 0 && (*it).username.size() > 0)
 				{
 					std::string msg_to_send = RPL_WELCOME();
-					send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-					(*it)->registered = true;
+					send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+					(*it).registered = true;
 				}
 			}
 		}
 		else
 		{
 			std::string msg_to_send = ERR_PASSWDMISMATCH();
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		}
 	}
 }
@@ -223,19 +223,19 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		{
 			for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 			{
-				if ((*chan)->get_name() == dest)
+				if ((*chan).get_name() == dest)
 				{
-					if (!(*chan)->onChannel(*it))
+					if (!(*chan).onChannel(&(*it)))
 					{
-						msg = (*chan)->getUserInfo((*it), false) + ERR_NOTONCHANNEL((*it)->nickname, (*chan)->get_name());
-						channel::setbuffer(msg, (*it)->client_fd);
+						msg = (*chan).getUserInfo(&(*it), false) + ERR_NOTONCHANNEL((*it).nickname, (*chan).get_name());
+						channel::setbuffer(msg, (*it).client_fd);
 						return 0;
 					}
-					for (deque_itr it3 = (*chan)->beta_users.begin(); it3 != (*chan)->beta_users.end(); ++it3)
+					for (deque_itr1 it3 = (*chan).beta_users.begin(); it3 != (*chan).beta_users.end(); ++it3)
 					{
-						if ((*it3)->nickname == (*it)->nickname)
+						if ((*it3)->nickname == (*it).nickname)
 							continue;
-						std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*chan)->get_name() + msg + "\r\n";
+						std::string msg_to_send = channel::getUserInfo(&(*it), 1) + "PRIVMSG " + (*chan).get_name() + msg + "\r\n";
 						send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
 					break;
@@ -244,17 +244,17 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		}
 		else if (dest == "jhonny")
 		{
-			std::string msg_to_send = ":jhonny!jhonny@localhost PRIVMSG " + (*it)->nickname + " : " + this->_bot.game(it, msg) + "\r\n";
-			send((*it)->client_fd, (msg_to_send.c_str()), msg_to_send.length(), 0);
+			std::string msg_to_send = ":jhonny!jhonny@localhost PRIVMSG " + (*it).nickname + " : " + this->_bot.game(it, msg) + "\r\n";
+			send((*it).client_fd, (msg_to_send.c_str()), msg_to_send.length(), 0);
 		}
 		else
 		{
 			deque_itr it3 = _clients.begin();
 			for (; it3 != _clients.end(); it3++)
 			{
-				if ((*it3)->nickname == dest)
+				if ((*it3).nickname == dest)
 				{
-					dest_fd = (*it3)->client_fd;
+					dest_fd = (*it3).client_fd;
 					break;
 				}
 			}
@@ -262,12 +262,12 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 				dest_fd = 0;
 			if (dest_fd == 0)
 			{
-				std::string msg_to_send = channel::getUserInfo(*it, 1) + ERR_NOSUCHNICK((*it)->nickname, dest);
-				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				std::string msg_to_send = channel::getUserInfo(&(*it), 1) + ERR_NOSUCHNICK((*it).nickname, dest);
+				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 			else
 			{
-				std::string msg_to_send = channel::getUserInfo(*it, 1) + "PRIVMSG " + (*it3)->nickname + msg + "\r\n";
+				std::string msg_to_send = channel::getUserInfo(&(*it), 1) + "PRIVMSG " + (*it3).nickname + msg + "\r\n";
 				send(dest_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			}
 		}
@@ -296,14 +296,14 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		bool found = false;
 		for (; chanel != this->_channels.end(); chanel++)
 		{
-			if ((*chanel)->get_name() == channel_name)
+			if ((*chanel).get_name() == channel_name)
 			{
 				found = true;
 				for (deque_itr trgt = this->_clients.begin(); trgt != this->_clients.end(); trgt++)
 				{
-					if ((*trgt)->nickname == target)
+					if ((*trgt).nickname == target)
 					{
-						(*chanel)->KICK(*it, *trgt, reason);
+						(*chanel).KICK(&(*it), &(*trgt), reason);
 						break;
 					}
 				}
@@ -312,8 +312,8 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		}
 		if (found == false)
 		{
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
 		return 1;
@@ -332,13 +332,13 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
-		std::string channel_name = words[1];
-		std::string nicknam = words[2];
+		std::string nicknam = words[1];
+		std::string channel_name = words[2];
 		bool found = false;
 		deque_chan it3 = _channels.begin();
 		for (; it3 != _channels.end(); it3++)
 		{
-			if ((*it3)->get_name() == channel_name)
+			if ((*it3).get_name() == channel_name)
 			{
 				found = true;
 				break;
@@ -346,18 +346,17 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		}
 		if (found == false)
 		{
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
 		for (deque_itr it4 = _clients.begin(); it4 != _clients.end(); it3++)
 		{
-			if ((*it4)->nickname == nicknam)
+			std::cout << "here\n";
+			if ((*it4).nickname == nicknam)
 			{
-
 				// ************ hadchi ba9i matesstac
-
-				(*it3)->INVITE(*it, *it4);
+				(*it3).INVITE(&(*it), &(*it4));
 				break;
 			}
 		}
@@ -385,19 +384,19 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			{
 				for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 				{
-					if ((*chan)->get_name() == channel_name)
+					if ((*chan).get_name() == channel_name)
 					{
 						found = true;
-						bool invite = (*chan)->Invit_Only();
-						bool has_password = (*chan)->HasPass();
-						bool limits = (*chan)->HasLimit();
+						bool invite = (*chan).Invit_Only();
+						bool has_password = (*chan).HasPass();
+						bool limits = (*chan).HasLimit();
 
 						if (invite)
 						{
-							deque_itr it3 = (*chan)->invited.begin();
-							for (; it3 != (*chan)->invited.end(); it3++)
+							deque_itr1 it3 = (*chan).invited.begin();
+							for (; it3 != (*chan).invited.end(); it3++)
 							{
-								if ((*it3)->nickname == (*it)->nickname)
+								if ((*it3)->nickname == (*it).nickname)
 								{
 									invite = false;
 									break;
@@ -406,37 +405,37 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 						}
 						if (has_password)
 						{
-							if (password == (*chan)->get_pass())
+							if (password == (*chan).get_pass())
 								has_password = false;
 						}
 						if (limits)
 						{
-							if ((*chan)->get_maxUsers() > (*chan)->beta_users.size())
+							if ((*chan).get_maxUsers() > (*chan).beta_users.size())
 								limits = false;
 						}
 						if (!limits && !has_password && !invite)
 						{
-							(*chan)->beta_users.push_back(*it); // adding alpha user to containers in server
-							std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + (*chan)->get_name() + "\r\n";
-							for (std::deque<Client *>::iterator betaUser = (*chan)->beta_users.begin(); betaUser != (*chan)->beta_users.end(); betaUser++)
+							(*chan).beta_users.push_back(&(*it)); // adding alpha user to containers in server
+							std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + (*chan).get_name() + "\r\n";
+							for (std::deque<Client *>::iterator betaUser = (*chan).beta_users.begin(); betaUser != (*chan).beta_users.end(); betaUser++)
 								send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 						}
 						else
 						{
 							if (limits)
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) + "471 " + (*it)->nickname + " " + (*chan)->get_name() + " :Cannot join channel (+l)\r\n";
-								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "471 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+l)\r\n";
+								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 							if (has_password)
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) + "475 " + (*it)->nickname + " " + (*chan)->get_name() + " :Cannot join channel (+k)\r\n";
-								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "475 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+k)\r\n";
+								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 							if (invite)
 							{
-								std::string msg_to_send = channel::getUserInfo((*it), 0) + "473 " + (*it)->nickname + " " + (*chan)->get_name() + ":Cannot join channel (+i)\r\n";
-								send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "473 " + (*it).nickname + " " + (*chan).get_name() + ":Cannot join channel (+i)\r\n";
+								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 							}
 						}
 						break;
@@ -447,20 +446,20 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			{
 				time_t currentTime;
 				time(&currentTime);
-				channel *new_channel = new channel(channel_name);
+				channel new_channel(channel_name);
 				std::string timeString = ctime(&currentTime);
-				new_channel->creation_time = timeString;
-				new_channel->alpha_users.push_back(*it);
-				new_channel->beta_users.push_back(*it);
-				std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
-				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				new_channel.creation_time = timeString;
+				new_channel.alpha_users.push_back(&(*it));
+				new_channel.beta_users.push_back(&(*it));
+				std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + new_channel.get_name() + "\r\n";
+				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 				_channels.push_back(new_channel);
 			}
 		}
 		else
 		{
-			std::string msg_to_send = channel::getUserInfo((*it), 1) + ERR_NOSUCHCHANNEL((*it)->nickname, std::string(*it2).substr(6)) + "\r\n";
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			std::string msg_to_send = channel::getUserInfo(&(*it), 1) + ERR_NOSUCHCHANNEL((*it).nickname, std::string(*it2).substr(6)) + "\r\n";
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		}
 		return 1;
 	}
@@ -486,9 +485,8 @@ void Server::read_data_from_socket(int i)
 			close(sender_fd); // Close socket
 			for (deque_itr it = _clients.begin(); it != _clients.end(); it++)
 			{
-				if ((*it)->client_fd == sender_fd)
+				if ((*it).client_fd == sender_fd)
 				{
-					delete *it;
 					_clients.erase(it);
 					break;
 				}
@@ -501,7 +499,7 @@ void Server::read_data_from_socket(int i)
 		deque_itr it = _clients.begin();
 		for (it = _clients.begin(); it != _clients.end(); it++)
 		{
-			if ((*it)->client_fd == sender_fd)
+			if ((*it).client_fd == sender_fd)
 				break;
 		}
 		std::string command_buffer;
@@ -514,7 +512,7 @@ void Server::read_data_from_socket(int i)
 		while (std::getline(ss, line, '\n'))
 			lines.push_back(line);
 		std::vector<std::string>::iterator it2 = lines.begin();
-		if ((*it)->registered == false)
+		if ((*it).registered == false)
 			regitration(lines, it, it2);
 		else
 		{
@@ -536,12 +534,12 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (topic_m(it, it2))
 					continue;
-				// else if (nickname(it, *it2)) // mabghach hadchi ikhdam tal ghada
+				// else if (nickname(it, *it2)) //mabghach hadchi ikhdam tal ghada
 				// 	continue;
 				else
 				{
-					std::string msg_send = channel::getUserInfo(*it, 0) + ERR_UNKNOWNCOMMAND((*it)->nickname, (*it2));
-					send((*it)->client_fd, msg_send.c_str(), msg_send.length(), 0);
+					std::string msg_send = channel::getUserInfo(&(*it), 0) + ERR_UNKNOWNCOMMAND((*it).nickname, (*it2));
+					send((*it).client_fd, msg_send.c_str(), msg_send.length(), 0);
 				}
 			}
 		}
@@ -550,11 +548,11 @@ void Server::read_data_from_socket(int i)
 
 bool Server::prepare_buffer(char *buffer, deque_itr &it, std::string &buffer2)
 {
-	(*it)->command += buffer;
-	if ((*it)->command.find("\n") == std::string::npos)
+	(*it).command += buffer;
+	if ((*it).command.find("\n") == std::string::npos)
 		return false;
-	buffer2 = (*it)->command;
-	(*it)->command.clear();
+	buffer2 = (*it).command;
+	(*it).command.clear();
 	return true;
 }
 int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
@@ -571,9 +569,9 @@ int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
 		deque_chan chan = _channels.begin();
 		for (; chan != _channels.end(); chan++)
 		{
-			if ((*chan)->get_name() == channel_name)
+			if ((*chan).get_name() == channel_name)
 			{
-				(*chan)->rpl_who(*it);
+				(*chan).rpl_who(&(*it));
 				break;
 			}
 		}
@@ -618,16 +616,16 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 		deque_chan chan = _channels.begin();
 		for (; chan != _channels.end(); chan++)
 		{
-			if ((*chan)->get_name() == channel_name)
+			if ((*chan).get_name() == channel_name)
 			{
-				(*chan)->PART(*it, reason);
+				(*chan).PART(&(*it), reason);
 				break;
 			}
 		}
 		if (chan == _channels.end())
 		{
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it)->nickname, channel_name);
-			send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		}
 		return 1;
 	}
@@ -643,21 +641,21 @@ int Server::nickname(deque_itr &it, std::string line)
 		deque_itr it2 = _clients.begin();
 		for (; it2 != _clients.end(); it2++)
 		{
-			if ((*it2)->nickname == nick)
+			if ((*it2).nickname == nick)
 			{
-				std::string msg_to_send = channel::getUserInfo(*it, 0) + " " + (*it)->nickname + " " + nick + ":Nickname is already in use\r\n";
-				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				std::string msg_to_send = channel::getUserInfo(&(*it), 0) + " " + (*it).nickname + " " + nick + ":Nickname is already in use\r\n";
+				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 				return 1;
 			}
 		}
 
-		std::string send_msg = channel::getUserInfo(*it, 1) + "NICK :" + nick;
-		send((*it)->client_fd, send_msg.c_str(), send_msg.length(), 0);
+		std::string send_msg = channel::getUserInfo(&(*it), 1) + "NICK :" + nick;
+		send((*it).client_fd, send_msg.c_str(), send_msg.length(), 0);
 		for (deque_itr client = _clients.begin(); client != _clients.end(); client++)
 		{
 			// send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
 		}
-		(*it)->nickname = nick;
+		(*it).nickname = nick;
 		return 1;
 	}
 	return 0;
@@ -676,14 +674,16 @@ void Server::del_from_poll_fds(int i)
 	this->_server.poll_count--;
 }
 
-channel *Server::get_chan(std::string name)
+channel* Server::get_chan(std::string name)
 {
 	for (size_t i = 0; i < _channels.size(); ++i)
 	{
-		if (_channels[i]->get_name() == name)
-			return _channels[i];
+		if (_channels[i].get_name() == name)
+		{
+			return &_channels[i];
+		}
 	}
-	return NULL;
+	return 0;
 }
 
 void Server::MODE(deque_itr &it, std::string line)
@@ -694,9 +694,11 @@ void Server::MODE(deque_itr &it, std::string line)
 	input >> channel_n >> mode >> param;
 	channel *chan = get_chan(channel_n);
 	if (chan)
-		chan->MODE(*it, mode, param);
+	{
+		(*chan).MODE(&(*it), mode, param);
+	}
 	else
-		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
+		channel::setbuffer(channel::getUserInfo(&(*it), false) + ERR_NOSUCHCHANNEL((*it).nickname, (*chan).get_name()), (*it).client_fd);
 }
 void Server::_Topic(deque_itr &it, std::string line)
 {
@@ -711,7 +713,7 @@ void Server::_Topic(deque_itr &it, std::string line)
 	}
 	channel *chan = get_chan(channel_n);
 	if (chan)
-		chan->TOPIC((*it), result);
+		(*chan).TOPIC(&(*it), result);
 	else
-		channel::setbuffer(channel::getUserInfo((*it), false) + ERR_NOSUCHCHANNEL((*it)->nickname, chan->get_name()), (*it)->client_fd);
+		channel::setbuffer(channel::getUserInfo(&(*it), false) + ERR_NOSUCHCHANNEL((*it).nickname, (*chan).get_name()), (*it).client_fd);
 }
