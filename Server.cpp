@@ -451,13 +451,13 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 				channel *new_channel = new channel(channel_name);
 				if (!new_channel)
 					return 99;
-					timeee << currentTime;
-					new_channel->set_time(timeee.str());
-					new_channel->alpha_users.push_back(*it);
-					new_channel->beta_users.push_back(*it);
-					std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
-					send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-					_channels.push_back(new_channel);
+				timeee << currentTime;
+				new_channel->set_time(timeee.str());
+				new_channel->alpha_users.push_back(*it);
+				new_channel->beta_users.push_back(*it);
+				std::string msg_to_send = channel::getUserInfo((*it), 1) + " JOIN " + new_channel->get_name() + "\r\n";
+				send((*it)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				_channels.push_back(new_channel);
 				// }
 			}
 		}
