@@ -671,6 +671,7 @@ void Server::add_to_poll_fds(int new_fd)
 }
 void Server::del_from_poll_fds(int i)
 {
+	close(this->_server.poll_fds[i].fd);
 	this->_server.poll_fds.erase(this->_server.poll_fds.begin() + i);
 	this->_server.poll_count--;
 }
