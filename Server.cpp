@@ -350,9 +350,8 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
-		for (deque_itr it4 = _clients.begin(); it4 != _clients.end(); it3++)
+		for (deque_itr it4 = _clients.begin(); it4 != _clients.end(); it4++)
 		{
-			std::cout << "here\n";
 			if ((*it4).nickname == nicknam)
 			{
 				// ************ hadchi ba9i matesstac
@@ -676,7 +675,7 @@ void Server::del_from_poll_fds(int i)
 	this->_server.poll_count--;
 }
 
-channel* Server::get_chan(std::string name)
+channel *Server::get_chan(std::string name)
 {
 	for (size_t i = 0; i < _channels.size(); ++i)
 	{
