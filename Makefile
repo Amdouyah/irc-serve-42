@@ -1,4 +1,4 @@
-NAME = a.out
+NAME = irc
 
 CC = c++
 

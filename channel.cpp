@@ -378,15 +378,15 @@ static int convertToInt(const std::string &str)
 
 void	channel::check_modes(){
 	std::string addModes;
-	if(this->has_pass)
+	if(has_pass)
 		addModes += "k";
-	if(this->invitOnly)
+	if(invitOnly)
 		addModes += "i";
-	if(this->limitsuser)
+	if(limitsuser)
 		addModes += "l";
-	if(this->oper)
+	if(oper)
 		addModes += "o";
-	if(this->has_topic)
+	if(has_topic)
 		addModes += "t";
 	this->modes_ = addModes;
 }
@@ -500,12 +500,13 @@ void channel::changMaxUser(Client *cli, int i, std::string &param)
 		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-l"));
 	}
 }
-
+// :luna.AfterNET.Org 353 client2 = #chan :@client2!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.I
+// :luna.AfterNET.Org 353 client1 = #chan :client1!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.IP @client2!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.
 void channel::who(Client *cli, Client *user)
 {
 	std::string rpl_msg;
 
-	rpl_msg += ":" + cli->servername + " 352 " + cli->nickname + " " + this->get_name() + " " + user->username + " " + user->username + " " + user->client_ip + " " + user->nickname + " H";
+	rpl_msg += ":" + cli->servername + " 352 " + cli->nickname + " = " + this->get_name() + " " + user->username + " " + user->username + " " + user->ip_adress + " " + user->nickname + " H";
 	if (isAlpha(user))
 		rpl_msg += "@";
 	rpl_msg += ":0 realname\r\n";
