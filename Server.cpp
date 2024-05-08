@@ -121,6 +121,16 @@ void Server::accept_new_connection(int server_socket)
 	_clients.push_back(new_client);
 }
 
+bool iscorrect(std::string a)
+{
+	std::string b = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	if(b.find(a) == std::string::npos)
+	{
+		return false;
+	}
+	return true;
+}
+
 void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	for (; it2 != lines.end(); it2++)
@@ -152,6 +162,15 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					std::stringstream ss(*it2);
 					std::string nick;
 					ss >> nick >> nick;
+					for (int i = 0; i < nick.length(); i++)
+					{
+						if (!iscorrect(std::string(1, nick[i])))
+						{
+							std::string msg_to_send = ERR_ERRONEUSNICKNAME(nick);
+							send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							return;
+						}
+					}
 					deque_itr clientPre = _clients.begin();
 					for (; clientPre != _clients.end(); clientPre++)
 					{
@@ -443,6 +462,12 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 			}
 			if (found == false)
 			{
+				if (_channels.size() > 10)
+				{
+					std::string msg_to_send = channel::getUserInfo(&(*it), 0) + " 403 " + (*it).nickname + " " + channel_name + " :you cant join newchannel\r\n";
+					send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+					return 1;
+				}
 				std::stringstream timeee;
 				time_t currentTime;
 				time(&currentTime);
@@ -535,8 +560,8 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (topic_m(it, it2))
 					continue;
-				// else if (nickname(it, *it2)) //mabghach hadchi ikhdam tal ghada
-				// 	continue;
+				else if (nickname(it, *it2)) //mabghach hadchi ikhdam tal ghada
+					continue;
 				else
 				{
 					std::string msg_send = channel::getUserInfo(&(*it), 0) + ERR_UNKNOWNCOMMAND((*it).nickname, (*it2));
@@ -639,6 +664,15 @@ int Server::nickname(deque_itr &it, std::string line)
 		std::stringstream ss(line);
 		std::string nick;
 		ss >> nick >> nick;
+		for (int i = 0; i < nick.length(); i++)
+		{
+			if (!iscorrect(std::string(1, nick[i])))
+			{
+				std::string msg_to_send = ERR_ERRONEUSNICKNAME(nick);
+				send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+				return 1;
+			}
+		}
 		deque_itr it2 = _clients.begin();
 		for (; it2 != _clients.end(); it2++)
 		{
@@ -649,12 +683,13 @@ int Server::nickname(deque_itr &it, std::string line)
 				return 1;
 			}
 		}
-
-		std::string send_msg = channel::getUserInfo(&(*it), 1) + "NICK :" + nick;
+		std::string send_msg = channel::getUserInfo(&(*it), 1) + "NICK :" + nick + "\r\n";
 		send((*it).client_fd, send_msg.c_str(), send_msg.length(), 0);
 		for (deque_itr client = _clients.begin(); client != _clients.end(); client++)
 		{
-			// send((*client)->client_fd, send_msg.c_str(), send_msg.length(), 0);
+			if ((*client).nickname == (*it).nickname)
+				continue;
+			send((*client).client_fd, send_msg.c_str(), send_msg.length(), 0);
 		}
 		(*it).nickname = nick;
 		return 1;
