@@ -67,27 +67,6 @@ std::string Bot::game(deque_itr it, std::string msg)
     return "";
 }
 
-std::string Bot::card_game(deque_itr it, std::string msg)
-{
-    bool flag = false;
-    deque_cardplayer tmp = _card_players.begin();
-    for (; tmp != _card_players.end(); tmp++)
-    {
-        if (tmp->name == (*it).nickname)
-        {
-            flag = true;
-            break;
-        }
-    }
-    if (flag == true)
-    {
-    }
-    else
-    {
-    }
-    return "";
-}
-
 std::string Bot::flipCoin(deque_itr it, std::string msg)
 {
     std::string rtrn = std::string("The coin landed on ");
@@ -105,4 +84,10 @@ std::string Bot::flipCoin(deque_itr it, std::string msg)
 std::string Bot::rollDice(deque_itr it, std::string msg)
 {
     return std::string("The dice rolled a ") + std::to_string(rand() % 6 + 1) + std::string("\n");
+}
+
+
+void Bot::kick_the_bad_guy(std::string msg, std::string nickname)
+{
+    // monitoring msg if you find fuck you in the msg kick the sender;
 }
