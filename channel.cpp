@@ -113,26 +113,28 @@ bool channel::isInvit(Client *cli)
 	return (std::find(this->invited.begin(), this->invited.end(), cli) != this->invited.end());
 }
 
-void channel::KICK(Client *admin, Client *cli, std::string reason)
+void channel::KICK(Client *admin, Client *cli, std::string reason, bool bot)
 {
 	std::string err_msg;
-	if (!this->onChannel(admin))
-	{
-		err_msg = getUserInfo(admin, false) + ERR_NOTONCHANNEL(admin->nickname, this->get_name());
-		setbuffer(err_msg, admin->client_fd);
-		return;
-	}
-	if (!this->isAlpha(admin))
-	{
-		err_msg = getUserInfo(admin, false) + ERR_CHANOPRIVSNEEDED(admin->nickname, this->get_name());
-		setbuffer(err_msg, admin->client_fd);
-		return;
-	}
-	if (!this->onChannel(cli))
-	{
-		err_msg = getUserInfo(cli, false) + ERR_NOTONCHANNEL(cli->nickname, this->get_name());
-		setbuffer(err_msg, cli->client_fd);
-		return;
+	if(!bot){
+		if (!this->onChannel(admin))
+		{
+			err_msg = getUserInfo(admin, false) + ERR_NOTONCHANNEL(admin->nickname, this->get_name());
+			setbuffer(err_msg, admin->client_fd);
+			return;
+		}
+		if (!this->isAlpha(admin))
+		{
+			err_msg = getUserInfo(admin, false) + ERR_CHANOPRIVSNEEDED(admin->nickname, this->get_name());
+			setbuffer(err_msg, admin->client_fd);
+			return;
+		}
+		if (!this->onChannel(cli))
+		{
+			err_msg = getUserInfo(cli, false) + ERR_NOTONCHANNEL(cli->nickname, this->get_name());
+			setbuffer(err_msg, cli->client_fd);
+			return;
+		}
 	}
 	SendToAllClient(getUserInfo(cli, true) + " KICK " + this->get_name() + " " + cli->nickname + " : " + (reason.empty() ? "bad content" : reason) + "\r\n");
 	rmvUser(cli);
@@ -500,24 +502,21 @@ void channel::changMaxUser(Client *cli, int i, std::string &param)
 		SendToAllClient(getUserInfo(cli, true) + RPL_CHANNELMODEIS(cli->nickname, this->_name, "-l"));
 	}
 }
-// :luna.AfterNET.Org 353 client2 = #chan :@client2!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.I
-// :luna.AfterNET.Org 353 client1 = #chan :client1!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.IP @client2!amdouyah@88ABE6.25BF1D.D03F86.88C9BD.
-void channel::who(Client *cli, Client *user)
+
+std::string channel::who(Client *cli, Client *user)
 {
 	std::string rpl_msg;
-
-	rpl_msg += ":" + cli->servername + " 352 " + cli->nickname + " = " + this->get_name() + " " + user->username + " " + user->username + " " + user->ip_adress + " " + user->nickname + " H";
-	if (isAlpha(user))
-		rpl_msg += "@";
-	rpl_msg += ":0 realname\r\n";
-	setbuffer(rpl_msg, cli->client_fd);
+	rpl_msg = ":" + cli->ip_adress + " " + RPL_WHOREPLY(cli->nickname, this->get_name(), user->username, user->hostname, user->ip_adress, user->nickname,(this->isAlpha(user) ? "@" : ""), "realname");
+	return rpl_msg;
 }
 void channel::rpl_who(Client *cli)
 {
+	std::string rpl_msg;
 	for (size_t i = 0; i < beta_users.size(); ++i)
 	{
-		who(cli, beta_users[i]);
+		rpl_msg += who(cli, beta_users[i]);
 	}
+	setbuffer(rpl_msg, cli->client_fd);
 	setbuffer(getUserInfo(cli, false) + RPL_ENDOFWHOIS(cli->nickname, this->get_name()), cli->client_fd);
 }
 

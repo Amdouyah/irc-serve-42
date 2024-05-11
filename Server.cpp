@@ -322,7 +322,7 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 				{
 					if ((*trgt).nickname == target)
 					{
-						(*chanel).KICK(&(*it), &(*trgt), reason);
+						(*chanel).KICK(&(*it), &(*trgt), reason, false);
 						break;
 					}
 				}
