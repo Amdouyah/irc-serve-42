@@ -34,6 +34,8 @@
 #define RPL_ENDOFNAMES(cli, chan)					(" 366 " + cli + " " + chan + " :End of /NAMES list\r\n")
 #define ERR_NOSUCHNICK(client,nick)						(" 401 "  + client + " " + nick + ":No such nick/channel\r\n")
 
+#define RPL_WHOREPLY(client, channel, username, host, server, nick, prefixes, realname)	("352 " + client + " " + channel + " " + username + " " + host + " " + server + " " + nick + " H" + prefixes + " :0 " + realname + "\r\n")
+
 #define ERR_ERRONEUSNICKNAME(nick)						(" 432 " + nick + " :Erroneus nickname\r\n")
 
 
@@ -58,7 +60,6 @@ class channel{
 
 
 	public:
-		//tatssaybe liha getter o ssetter please
 		channel();
 
 
@@ -100,16 +101,16 @@ class channel{
 		static void			setbuffer(std::string msg_to_send, int dest_fd);
 
 		//commands
-		void		KICK(Client *admin, Client *cli, std::string reason);
+		void		KICK(Client *admin, Client *cli, std::string reason, bool bot);
 		void		INVITE(Client *admin, Client *cli);
 		void 		MODE(Client *admin, std::string mode, std::string param);
 		void 		PART(Client *cli, std::string reason);
 		void 		TOPIC(Client *cli, std::string topicmsg);
 
 		//who
-		void 		who(Client *cli, Client *user);
-		void 		rpl_who(Client *cli);
-		void 		rpl_list(Client *cli);
+		std::string 		who(Client *cli, Client *user);
+		void 				rpl_who(Client *cli);
+		void 				rpl_list(Client *cli);
 
 		//mode
 		void 		check_modes();
