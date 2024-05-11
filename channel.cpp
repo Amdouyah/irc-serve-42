@@ -359,6 +359,12 @@ void channel::PART(Client *cli, std::string reason)
 	{
 		SendToAllClient(getUserInfo(cli, true) + " PART " + this->get_name() + " " + reason + "\r\n");
 		this->rmvUser(cli);
+		if(this->beta_users.size() > 0){
+			if(this->alpha_users.size() == 0){
+				set_Alpha(beta_users[0]);
+				SendToAllClient(getUserInfo(beta_users[0], true) + RPL_CHANNELMODEIS(beta_users[0]->nickname, this->_name, "+o " + beta_users[0]->nickname));
+			}
+		}
 	}
 }
 
@@ -581,6 +587,7 @@ void	channel::rpl_list(Client *cli){
 			rpl_msg += "@";
 		rpl_msg += beta_users[i]->nickname + " ";
 	}
+	rpl_msg += "@bot ";
 	rpl_msg += "\r\n";
 	setbuffer(rpl_msg, cli->client_fd);
 	setbuffer(getUserInfo(cli, false) + RPL_ENDOFNAMES(cli->nickname, this->get_name()), cli->client_fd);
