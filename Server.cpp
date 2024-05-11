@@ -11,7 +11,6 @@ int Server::create_server_socket(void)
 	struct sockaddr_in sa;
 	int socket_fd;
 	int status;
-
 	// Prepare the address and port for the server socket
 	std::memset(&sa, 0, sizeof sa);
 	sa.sin_family = AF_INET;					 // IPv4
@@ -73,11 +72,7 @@ void Server::start()
 			break;
 		}
 		status = ::poll(&this->_server.poll_fds[0], this->_server.poll_count, 2000);
-		if (status == -1)
-		{
-			throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
-		}
-		else if (status == 0)
+		if (status == 0)
 			continue;
 		else if (status > 0)
 		{
@@ -122,7 +117,7 @@ void Server::accept_new_connection(int server_socket)
 
 bool iscorrect(std::string a)
 {
-	std::string b = "#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	std::string b = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	if (b.find(a) == std::string::npos)
 	{
 		return false;
@@ -256,7 +251,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 						std::string msg_to_send = channel::getUserInfo(&(*it), 1) + "PRIVMSG " + (*chan).get_name() + msg + "\r\n";
 						send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
-					// this->_bot.kick_the_bad_guy(msg, (*it)->nickname)
+					this->_bot.kick_the_bad_guy(msg, &(*it), chan);
 					break;
 				}
 			}

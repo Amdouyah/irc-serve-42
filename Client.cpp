@@ -11,4 +11,5 @@ Client::Client()
     this->realname = "";
     this->servername = "";
     this->hostname = "";
+    this->playing_game = false;
 }

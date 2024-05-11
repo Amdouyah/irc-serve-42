@@ -1,4 +1,5 @@
 #include "Bot.hpp"
+#include "channel.hpp"
 #include <sstream>
 
 
@@ -7,7 +8,22 @@ Bot::Bot()
     _name = "jhonny";
 }
 
-std::string Bot::game(deque_itr it, std::string msg)
+std::string Bot::game(deque_itr &it, std::string msg)
+{
+    std::string rtrn;
+    if(msg.find(" :play with me") == 0 || (*it).playing_game == true)
+        rtrn = this->guess_game(it, msg);
+    else if(msg.find(" :flip a coin") == 0)
+        rtrn = this->flipCoin(it, msg);
+    else if(msg.find(" :roll a dice") == 0)
+        rtrn = this->rollDice(it, msg);
+    else
+        return "command are play with me, flip a coin, roll a dice\n";
+    return rtrn;
+}
+
+
+std::string Bot::guess_game(deque_itr &it, std::string msg)
 {
     bool flag = false;
     deque_player tmp = _players.begin();
@@ -51,12 +67,14 @@ std::string Bot::game(deque_itr it, std::string msg)
         {
             std::string rtrn = std::string("Sorry ") + (*it).nickname + std::string(" you have used all your tries, the number was ") + std::to_string(tmp->number) + std::string("\n");
             _players.erase(tmp);
+            (*it).playing_game = false;
             return rtrn;
         }
     }
     else
     {
         players temp;
+        (*it).playing_game = true;
         temp.name = (*it).nickname;
         temp.tries = 0;
         temp.number = rand() % 200;
@@ -87,11 +105,11 @@ std::string Bot::rollDice(deque_itr it, std::string msg)
 }
 
 
-void Bot::kick_the_bad_guy(std::string msg, std::string nickname)
+void Bot::kick_the_bad_guy(std::string msg, Client *it, std::deque<channel >::iterator &chan)
 {
     // monitoring msg if you find fuck you in the msg kick the sender;
     if(msg.find("fuck you") != std::string::npos)
-    {
-        
+    {  
+        (*chan).KICK(0, it, "bad boy", true);
     }
 }

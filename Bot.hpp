@@ -6,6 +6,7 @@
 #include <vector>
 #include <deque>
 #include "Client.hpp"
+#include "channel.hpp"
 #define deque_itr std::deque<Client >::iterator
 #define deque_player std::vector<players>::iterator
 #define deque_cardplayer std::vector<card_players>::iterator
@@ -28,10 +29,11 @@ class Bot
 
 public:
 	Bot();
-	std::string game(deque_itr it, std::string msg);
+	std::string game(deque_itr &it, std::string msg);
+	std::string guess_game(deque_itr &it, std::string msg);
 	std::string rollDice(deque_itr it, std::string msg);
-	void kick_the_bad_guy(std::string msg, std::string nickname);
 	std::string flipCoin(deque_itr it, std::string msg);
+	void kick_the_bad_guy(std::string msg, Client *it, std::deque<channel >::iterator &chan);
 
 
 private:

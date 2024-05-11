@@ -17,6 +17,7 @@ class Client {
     std::string realname;
     std::string ip_adress;
     std::string command;
+    bool playing_game;
     bool password;
     bool registered;
 	struct sockaddr_in client_addr;
