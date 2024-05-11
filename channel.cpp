@@ -584,5 +584,5 @@ void	channel::rpl_list(Client *cli){
 	}
 	rpl_msg += "\r\n";
 	setbuffer(rpl_msg, cli->client_fd);
-	setbuffer(getUserInfo(cli, false) + RPL_ENDOFWHOIS(cli->nickname, this->get_name()), cli->client_fd);
+	setbuffer(getUserInfo(cli, false) + RPL_ENDOFNAMES(cli->nickname, this->get_name()), cli->client_fd);
 }
