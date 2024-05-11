@@ -256,6 +256,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 						std::string msg_to_send = channel::getUserInfo(&(*it), 1) + "PRIVMSG " + (*chan).get_name() + msg + "\r\n";
 						send((*it3)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 					}
+					//this->_bot.kick_the_bad_guy(msg, (*it)->nickname)
 					break;
 				}
 			}
@@ -396,6 +397,15 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::string password = words[2];
 		if (channel_name.find("#") == 0)
 		{
+			for (int i = 0; i < channel_name.length(); i++)
+			{
+				if (!iscorrect(std::string(1, channel_name[i])))
+				{
+					//std::string msg_to_send = ERR_ERRONEUSNICKNAME(channel_name); error no cush channel name 
+					send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+					return 1;
+				}
+			}
 			bool found = false;
 			if (_channels.size() > 0)
 			{

@@ -29,8 +29,8 @@ class Bot
 public:
 	Bot();
 	std::string game(deque_itr it, std::string msg);
-	std::string card_game(deque_itr it, std::string msg);
 	std::string rollDice(deque_itr it, std::string msg);
+	void kick_the_bad_guy(std::string msg, std::string nickname);
 	std::string flipCoin(deque_itr it, std::string msg);
 
 
