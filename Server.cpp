@@ -75,25 +75,24 @@ void Server::start()
 		status = ::poll(&this->_server.poll_fds[0], this->_server.poll_count, 2000);
 		if (status == -1)
 		{
-			if (errno == EINTR)
-				continue;
-			else
-				throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
+			throw std::runtime_error("[Server] Poll error: " + std::string(strerror(errno)));
 		}
 		else if (status == 0)
 			continue;
-
-		for (int i = 0; i < this->_server.poll_count; i++)
+		else if (status > 0)
 		{
-			if ((this->_server.poll_fds[i].revents & POLLIN))
+			for (int i = 0; i < this->_server.poll_count; i++)
 			{
-				if (this->_server.poll_fds[i].fd == this->_server.server_socket)
+				if ((this->_server.poll_fds[i].revents & POLLIN))
 				{
-					accept_new_connection(this->_server.server_socket);
-				}
-				else
-				{
-					read_data_from_socket(i);
+					if (this->_server.poll_fds[i].fd == this->_server.server_socket)
+					{
+						accept_new_connection(this->_server.server_socket);
+					}
+					else
+					{
+						read_data_from_socket(i);
+					}
 				}
 			}
 		}
@@ -124,7 +123,7 @@ void Server::accept_new_connection(int server_socket)
 bool iscorrect(std::string a)
 {
 	std::string b = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	if(b.find(a) == std::string::npos)
+	if (b.find(a) == std::string::npos)
 	{
 		return false;
 	}
@@ -405,58 +404,66 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 					if ((*chan).get_name() == channel_name)
 					{
 						found = true;
-						bool invite = (*chan).Invit_Only();
-						bool has_password = (*chan).HasPass();
-						bool limits = (*chan).HasLimit();
-
-						if (invite)
+						if ((*chan).beta_users.size() == 0)
 						{
-							deque_itr1 it3 = (*chan).invited.begin();
-							for (; it3 != (*chan).invited.end(); it3++)
-							{
-								if ((*it3)->nickname == (*it).nickname)
-								{
-									invite = false;
-									break;
-								}
-							}
-						}
-						if (has_password)
-						{
-							if (password == (*chan).get_pass())
-								has_password = false;
-						}
-						if (limits)
-						{
-							if ((*chan).get_maxUsers() > (*chan).beta_users.size())
-								limits = false;
-						}
-						if (!limits && !has_password && !invite)
-						{
-							(*chan).beta_users.push_back(&(*it)); // adding alpha user to containers in server
-							std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + (*chan).get_name() + "\r\n";
-							for (std::deque<Client *>::iterator betaUser = (*chan).beta_users.begin(); betaUser != (*chan).beta_users.end(); betaUser++)
-								send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							_channels.erase(chan);
+							found = false;
 						}
 						else
 						{
-							if (limits)
+							bool invite = (*chan).Invit_Only();
+							bool has_password = (*chan).HasPass();
+							bool limits = (*chan).HasLimit();
+
+							if (invite)
 							{
-								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "471 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+l)\r\n";
-								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								deque_itr1 it3 = (*chan).invited.begin();
+								for (; it3 != (*chan).invited.end(); it3++)
+								{
+									if ((*it3)->nickname == (*it).nickname)
+									{
+										invite = false;
+										break;
+									}
+								}
 							}
 							if (has_password)
 							{
-								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "475 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+k)\r\n";
-								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								if (password == (*chan).get_pass())
+									has_password = false;
 							}
-							if (invite)
+							if (limits)
 							{
-								std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "473 " + (*it).nickname + " " + (*chan).get_name() + ":Cannot join channel (+i)\r\n";
-								send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								if ((*chan).get_maxUsers() > (*chan).beta_users.size())
+									limits = false;
 							}
+							if (!limits && !has_password && !invite)
+							{
+								(*chan).beta_users.push_back(&(*it)); // adding alpha user to containers in server
+								std::string msg_to_send = channel::getUserInfo(&(*it), 1) + " JOIN " + (*chan).get_name() + "\r\n";
+								for (std::deque<Client *>::iterator betaUser = (*chan).beta_users.begin(); betaUser != (*chan).beta_users.end(); betaUser++)
+									send((*betaUser)->client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+							}
+							else
+							{
+								if (limits)
+								{
+									std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "471 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+l)\r\n";
+									send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								}
+								if (has_password)
+								{
+									std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "475 " + (*it).nickname + " " + (*chan).get_name() + " :Cannot join channel (+k)\r\n";
+									send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								}
+								if (invite)
+								{
+									std::string msg_to_send = channel::getUserInfo(&(*it), 0) + "473 " + (*it).nickname + " " + (*chan).get_name() + ":Cannot join channel (+i)\r\n";
+									send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+								}
+							}
+							break;
 						}
-						break;
 					}
 				}
 			}
@@ -560,7 +567,7 @@ void Server::read_data_from_socket(int i)
 					continue;
 				else if (topic_m(it, it2))
 					continue;
-				else if (nickname(it, *it2)) //mabghach hadchi ikhdam tal ghada
+				else if (nickname(it, *it2)) // mabghach hadchi ikhdam tal ghada
 					continue;
 				else
 				{
