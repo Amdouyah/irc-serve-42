@@ -90,4 +90,8 @@ std::string Bot::rollDice(deque_itr it, std::string msg)
 void Bot::kick_the_bad_guy(std::string msg, std::string nickname)
 {
     // monitoring msg if you find fuck you in the msg kick the sender;
+    if(msg.find("fuck you") != std::string::npos)
+    {
+        
+    }
 }

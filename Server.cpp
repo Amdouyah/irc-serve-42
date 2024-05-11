@@ -122,7 +122,7 @@ void Server::accept_new_connection(int server_socket)
 
 bool iscorrect(std::string a)
 {
-	std::string b = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	std::string b = "#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	if (b.find(a) == std::string::npos)
 	{
 		return false;
@@ -397,15 +397,16 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::string password = words[2];
 		if (channel_name.find("#") == 0)
 		{
-			// for (int i = 0; i < channel_name.length(); i++)
-			// {
-			// 	if (!iscorrect(std::string(1, channel_name[i])))
-			// 	{
-			// 		// std::string msg_to_send = ERR_ERRONEUSNICKNAME(channel_name); error no cush channel name
-			// 		//  send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-			// 		return 1;
-			// 	}
-			// }
+			std::string namechan = channel_name.substr(1);
+			for (int i = 0; i < namechan.length(); i++)
+			{
+				if (!iscorrect(std::string(1, namechan[i])))
+				{
+					std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
+					send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+					return 1;
+				}
+			}
 			bool found = false;
 			if (_channels.size() > 0)
 			{
