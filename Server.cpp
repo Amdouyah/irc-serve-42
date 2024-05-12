@@ -228,6 +228,12 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
+		if (words.size() < 3)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string dest = words[1];
 		std::string msg;
 		for (int i = 2; i < words.size(); i++)
@@ -300,7 +306,12 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
-
+		if(words.size() < 3)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string channel_name = words[1];
 		std::string target = words[2];
 		std::string reason;
@@ -346,6 +357,12 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
+		if (words.size() < 3)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string nicknam = words[1];
 		std::string channel_name = words[2];
 		bool found = false;
@@ -388,8 +405,16 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
+		if (words.size() < 2)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string channel_name = words[1];
-		std::string password = words[2];
+		std::string password = "";
+		if (words.size() == 3)
+			password = words[2];
 		if (channel_name.find("#") == 0)
 		{
 			std::string namechan = channel_name.substr(1);
@@ -604,6 +629,12 @@ int Server::WHO(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
+		if (words.size() == 1)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string channel_name = words[1];
 		deque_chan chan = _channels.begin();
 		for (; chan != _channels.end(); chan++)
@@ -650,7 +681,7 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
-		if(words.size() == 1)
+		if (words.size() == 1)
 		{
 			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
 			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
@@ -660,7 +691,7 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::string reason = words[2];
 		if (reason.length() <= 0)
 			reason = "Leaving";
-		if(channel_name.length() <= 0)
+		if (channel_name.length() <= 0)
 			channel_name = " ";
 		for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 		{
@@ -670,8 +701,8 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 				return 1;
 			}
 		}
-			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
-			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+		std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
+		send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 		return 1;
 	}
 	return 0;
@@ -682,7 +713,15 @@ int Server::nickname(deque_itr &it, std::string line)
 	{
 		std::stringstream ss(line);
 		std::string nick;
-		ss >> nick >> nick;
+		int i = 0;
+		while(ss >> nick)
+			i++;
+		if(i < 2)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		for (int i = 0; i < nick.length(); i++)
 		{
 			if (!iscorrect(std::string(1, nick[i])))
