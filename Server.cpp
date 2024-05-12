@@ -808,7 +808,7 @@ void Server::_Topic(deque_itr &it, std::string line)
 	}
 	channel *chan = get_chan(channel_n);
 	if (chan)
-		(*chan).TOPIC(&(*it), result);
+		(*chan).TOPIC(&(*it), result.substr(1));
 	else
 		channel::setbuffer(channel::getUserInfo(&(*it), false) + ERR_NOSUCHCHANNEL((*it).nickname, channel_n), (*it).client_fd);
 }

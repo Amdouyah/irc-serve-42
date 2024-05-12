@@ -232,7 +232,7 @@ void	channel::TOPIC(Client *cli, std::string topicmsg){
 		{
 			set_topic(topicmsg);
 			rpl_msg = getUserInfo(cli, true) + RPL_TOPIC(cli->nickname, this->get_name(), topicmsg);
-			setbuffer(rpl_msg, cli->client_fd);
+			SendToAllClient(rpl_msg);
 			return;
 		}
 		else{
@@ -246,7 +246,7 @@ void	channel::TOPIC(Client *cli, std::string topicmsg){
 		{
 			set_topic(topicmsg);
 			rpl_msg = getUserInfo(cli, true) + RPL_TOPIC(cli->nickname, this->get_name(), topicmsg);
-			setbuffer(rpl_msg, cli->client_fd);
+			SendToAllClient(rpl_msg);
 			return;
 		}
 		else{
