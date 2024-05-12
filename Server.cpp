@@ -13,8 +13,8 @@ int Server::create_server_socket(void)
 	int status;
 	// Prepare the address and port for the server socket
 	std::memset(&sa, 0, sizeof sa);
-	sa.sin_family = AF_INET;					 // IPv4
-	sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1, localhost
+	sa.sin_family = AF_INET;				// IPv4
+	sa.sin_addr.s_addr = htonl(INADDR_ANY); // 127.0.0.1, localhost
 	sa.sin_port = htons(this->_server.port);
 	// Create listening socket
 	socket_fd = socket(sa.sin_family, SOCK_STREAM, 0);
@@ -633,7 +633,7 @@ int Server::topic_m(deque_itr &it, std::vector<std::string>::iterator &it2)
 {
 	if ((*it2).find("TOPIC") == 0)
 	{
-		std::string evrything = std::string((*it2).substr(5));
+		std::string evrything = std::string((*it2).substr(6));
 		_Topic(it, evrything);
 		return 1;
 	}
@@ -650,22 +650,28 @@ int Server::part(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::vector<std::string> words;
 		while (ss >> word)
 			words.push_back(word);
+		if(words.size() == 1)
+		{
+			std::string msg_to_send = ERR_NEEDMOREPARAMS1();
+			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
+			return 1;
+		}
 		std::string channel_name = words[1];
 		std::string reason = words[2];
-		deque_chan chan = _channels.begin();
-		for (; chan != _channels.end(); chan++)
+		if (reason.length() <= 0)
+			reason = "Leaving";
+		if(channel_name.length() <= 0)
+			channel_name = " ";
+		for (deque_chan chan = _channels.begin(); chan != _channels.end(); chan++)
 		{
 			if ((*chan).get_name() == channel_name)
 			{
 				(*chan).PART(&(*it), reason);
-				break;
+				return 1;
 			}
 		}
-		if (chan == _channels.end())
-		{
 			std::string msg_to_send = ERR_NOSUCHCHANNEL((*it).nickname, channel_name);
 			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
-		}
 		return 1;
 	}
 	return 0;
