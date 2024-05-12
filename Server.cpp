@@ -771,5 +771,5 @@ void Server::_Topic(deque_itr &it, std::string line)
 	if (chan)
 		(*chan).TOPIC(&(*it), result);
 	else
-		channel::setbuffer(channel::getUserInfo(&(*it), false) + ERR_NOSUCHCHANNEL((*it).nickname, (*chan).get_name()), (*it).client_fd);
+		channel::setbuffer(channel::getUserInfo(&(*it), false) + ERR_NOSUCHCHANNEL((*it).nickname, channel_n), (*it).client_fd);
 }
