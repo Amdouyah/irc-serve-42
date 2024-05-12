@@ -11,22 +11,19 @@ int Server::create_server_socket(void)
 	struct sockaddr_in sa;
 	int socket_fd;
 	int status;
-	// Prepare the address and port for the server socket
 	std::memset(&sa, 0, sizeof sa);
-	sa.sin_family = AF_INET;				// IPv4
-	sa.sin_addr.s_addr = htonl(INADDR_ANY); // 127.0.0.1, localhost
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = htonl(INADDR_ANY); 
 	sa.sin_port = htons(this->_server.port);
-	// Create listening socket
 	socket_fd = socket(sa.sin_family, SOCK_STREAM, 0);
 	if (socket_fd == -1)
 		throw(std::runtime_error("faild to create socket"));
 	int en = 1;
-	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) //-> set the socket option (SO_REUSEADDR) to reuse the address
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) 
 		throw(std::runtime_error("faild to set option (SO_REUSEADDR) on socket"));
-	if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
+	if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) 
 		throw(std::runtime_error("faild to set option (O_NONBLOCK) on socket"));
 	std::cout << "[Server] Created server socket fd: " << socket_fd << std::endl;
-	// Bind socket to address and port
 	status = bind(socket_fd, (struct sockaddr *)&sa, sizeof sa);
 	if (status != 0)
 	{
@@ -101,7 +98,6 @@ Server::~Server()
 void Server::accept_new_connection(int server_socket)
 {
 	int client_fd;
-	int status;
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
 	client_fd = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len);
@@ -156,7 +152,7 @@ void Server::regitration(std::vector<std::string> &lines, deque_itr &it, std::ve
 					std::stringstream ss(*it2);
 					std::string nick;
 					ss >> nick >> nick;
-					for (int i = 0; i < nick.length(); i++)
+					for (size_t i = 0; i < nick.length(); i++)
 					{
 						if (!iscorrect(std::string(1, nick[i])))
 						{
@@ -236,7 +232,7 @@ int Server::privmsg(std::vector<std::string>::iterator &it2, deque_itr &it)
 		}
 		std::string dest = words[1];
 		std::string msg;
-		for (int i = 2; i < words.size(); i++)
+		for (size_t i = 2; i < words.size(); i++)
 			msg += " " + words[i];
 		if (dest.find("#") == 0)
 		{
@@ -315,7 +311,7 @@ int Server::kick_server(deque_itr &it, std::vector<std::string>::iterator &it2)
 		std::string channel_name = words[1];
 		std::string target = words[2];
 		std::string reason;
-		for (int i = 3; i < words.size(); i++)
+		for (size_t i = 3; i < words.size(); i++)
 			reason += words[i] + " ";
 		deque_chan chanel = this->_channels.begin();
 		bool found = false;
@@ -385,7 +381,6 @@ int Server::invite_to_channel(deque_itr &it, std::vector<std::string>::iterator 
 		{
 			if ((*it4).nickname == nicknam)
 			{
-				// ************ hadchi ba9i matesstac
 				(*it3).INVITE(&(*it), &(*it4));
 				break;
 			}
@@ -418,7 +413,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 		if (channel_name.find("#") == 0)
 		{
 			std::string namechan = channel_name.substr(1);
-			for (int i = 0; i < namechan.length(); i++)
+			for (size_t i = 0; i < namechan.length(); i++)
 			{
 				if (!iscorrect(std::string(1, namechan[i])))
 				{
@@ -465,7 +460,7 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 							}
 							if (limits)
 							{
-								if ((*chan).get_maxUsers() > (*chan).beta_users.size())
+								if ((size_t)(*chan).get_maxUsers() > (*chan).beta_users.size())
 									limits = false;
 							}
 							if (!limits && !has_password && !invite)
@@ -533,7 +528,6 @@ int Server::join(deque_itr &it, std::vector<std::string>::iterator &it2)
 void Server::read_data_from_socket(int i)
 {
 	char buffer[BUFSIZ];
-	char msg_to_send[BUFSIZ];
 	int bytes_read;
 	int sender_fd;
 	sender_fd = this->_server.poll_fds[i].fd;
@@ -722,7 +716,7 @@ int Server::nickname(deque_itr &it, std::string line)
 			send((*it).client_fd, msg_to_send.c_str(), msg_to_send.length(), 0);
 			return 1;
 		}
-		for (int i = 0; i < nick.length(); i++)
+		for (size_t i = 0; i < nick.length(); i++)
 		{
 			if (!iscorrect(std::string(1, nick[i])))
 			{

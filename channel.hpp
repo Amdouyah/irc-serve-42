@@ -57,10 +57,8 @@ class channel{
 		bool 		oper;
 		std::string modes_;
 		std::string	creation_time;
-
-
-	public:
 		channel();
+	public:
 
 
 		std::deque<Client *> alpha_users;
@@ -69,7 +67,6 @@ class channel{
 
 
 		channel(std::string name);
-		channel(Client *cretor, std::string name);
 		~channel();
 
 		void set_name(std::string name);

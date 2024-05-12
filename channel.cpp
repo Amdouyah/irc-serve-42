@@ -1,15 +1,5 @@
 #include "channel.hpp"
 
-channel::channel()
-{
-	_name = "default";
-	invitOnly = false;
-	has_pass = false;
-	has_topic = false;
-	oper = false;
-	limitsuser = false;
-
-}
 channel::~channel()
 {
 }

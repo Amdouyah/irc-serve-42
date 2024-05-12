@@ -14,9 +14,9 @@ std::string Bot::game(deque_itr &it, std::string msg)
     if(msg.find(" :play with me") == 0 || (*it).playing_game == true)
         rtrn = this->guess_game(it, msg);
     else if(msg.find(" :flip a coin") == 0)
-        rtrn = this->flipCoin(it, msg);
+        rtrn = this->flipCoin();
     else if(msg.find(" :roll a dice") == 0)
-        rtrn = this->rollDice(it, msg);
+        rtrn = this->rollDice();
     else
         return "command are play with me, flip a coin, roll a dice\n";
     return rtrn;
@@ -85,7 +85,7 @@ std::string Bot::guess_game(deque_itr &it, std::string msg)
     return "";
 }
 
-std::string Bot::flipCoin(deque_itr it, std::string msg)
+std::string Bot::flipCoin()
 {
     std::string rtrn = std::string("The coin landed on ");
     if (rand() % 2 == 0)
@@ -99,7 +99,7 @@ std::string Bot::flipCoin(deque_itr it, std::string msg)
     return rtrn;
 }
 
-std::string Bot::rollDice(deque_itr it, std::string msg)
+std::string Bot::rollDice()
 {
     return std::string("The dice rolled a ") + std::to_string(rand() % 6 + 1) + std::string("\n");
 }
@@ -107,7 +107,6 @@ std::string Bot::rollDice(deque_itr it, std::string msg)
 
 void Bot::kick_the_bad_guy(std::string msg, Client *it, std::deque<channel >::iterator &chan)
 {
-    // monitoring msg if you find fuck you in the msg kick the sender;
     if(msg.find("fuck you") != std::string::npos)
     {  
         (*chan).KICK(0, it, "bad boy", true);

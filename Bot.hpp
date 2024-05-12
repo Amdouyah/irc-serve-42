@@ -31,8 +31,8 @@ public:
 	Bot();
 	std::string game(deque_itr &it, std::string msg);
 	std::string guess_game(deque_itr &it, std::string msg);
-	std::string rollDice(deque_itr it, std::string msg);
-	std::string flipCoin(deque_itr it, std::string msg);
+	std::string rollDice();
+	std::string flipCoin();
 	void kick_the_bad_guy(std::string msg, Client *it, std::deque<channel >::iterator &chan);
 
 
