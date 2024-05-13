@@ -1,7 +1,6 @@
 #include "Server.hpp"
 
-void Server::signal_handler(int sig)
-{
+void Server::signal_handler(int sig){
 	(void)sig;
 	Server::_shutdown = true;
 }
@@ -91,8 +90,7 @@ void Server::start()
 	}
 }
 
-Server::~Server()
-{
+Server::~Server(){
 }
 
 void Server::accept_new_connection(int server_socket)

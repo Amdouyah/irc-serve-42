@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hassimi <hassimi@student.42.fr>            +#+  +:+       +#+        */
+/*   By: amdouyah <amdouyah@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/14 16:28:04 by hassimi           #+#    #+#             */
-/*   Updated: 2024/03/24 18:16:56 by hassimi          ###   ########.fr       */
+/*   Updated: 2024/05/13 10:46:00 by amdouyah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 #include <sstream>
 #include <sstream>
 #include <signal.h>
-
 
 bool Server::_shutdown = false;
 int main(int ac, char **av)

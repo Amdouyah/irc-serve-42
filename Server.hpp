@@ -17,7 +17,7 @@
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <arpa/inet.h> // inet_ntop
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <deque>
 #include <fcntl.h>

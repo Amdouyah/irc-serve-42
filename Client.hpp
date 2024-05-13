@@ -3,8 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include <netinet/in.h> // sockaddr_in
-
+#include <netinet/in.h>
 
 class Client {
     public:

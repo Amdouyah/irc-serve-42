@@ -1,10 +1,8 @@
 #include "channel.hpp"
 
-channel::~channel()
-{
+channel::~channel(){
 }
-channel::channel(std::string name) : _name(name)
-{
+channel::channel(std::string name) : _name(name){
 	invitOnly = false;
 	has_pass = false;
 	has_topic = false;

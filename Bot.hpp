@@ -7,6 +7,7 @@
 #include <deque>
 #include "Client.hpp"
 #include "channel.hpp"
+
 #define deque_itr std::deque<Client >::iterator
 #define deque_player std::vector<players>::iterator
 #define deque_cardplayer std::vector<card_players>::iterator

@@ -2,7 +2,6 @@
 #include "channel.hpp"
 #include <sstream>
 
-
 Bot::Bot()
 {
     _name = "jhonny";
